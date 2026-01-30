@@ -1,0 +1,465 @@
+/* App.css - The "Repo Hunter" Theme */
+:root {
+  /* Functional Palette */
+  --bg-app: #0d1117;       /* GitHub Dark Dimmed */
+  --bg-panel: #161b22;     /* Slightly lighter for panels */
+  --bg-input: #0d1117;     
+  
+  --accent-primary: #2f81f7; /* Action Blue */
+  --accent-glow: rgba(47, 129, 247, 0.15);
+  
+  --text-primary: #e6edf3;
+  --text-secondary: #7d8590;
+  --text-code: #ff7b72;    /* For technical tags */
+  
+  --border-color: #30363d;
+  --radius: 6px;           /* Tighter radius for a "tool" feel */
+  
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.App {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* --- Compact Header (The "Finder" Bar) --- */
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+}
+
+.brand-group h1 {
+  font-family: var(--font-mono);
+  font-size: 1.5rem; /* Drastically smaller */
+  margin: 0;
+  color: var(--accent-primary);
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-group p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* --- Navigation (Tab Style) --- */
+.navbar {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--text-primary);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+}
+
+/* --- Search / Filter Zone --- */
+.controls-section {
+  background: var(--bg-panel);
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.search-input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* --- High-Density Grid --- */
+.repo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* Wider cards */
+  gap: 16px;
+}
+
+/* --- Tech Card Design --- */
+.repo-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.repo-card:hover {
+  border-color: var(--text-secondary);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 10px;
+}
+
+.repo-title {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.repo-title:hover {
+  text-decoration: underline;
+}
+
+.stars-badge {
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  background: var(--bg-app);
+  padding: 2px 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.repo-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  flex-grow: 1;
+}
+
+.card-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  align-items: center;
+}
+
+.lang-tag {
+  color: var(--text-code);
+  font-weight: 600;
+}
+
+/* --- High-Density Grid --- */
+.repo-list {
+  display: grid;
+  /* Auto-fill creates columns that fit the screen width */
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
+  gap: 24px; /* This is the gap you were missing */
+  padding-bottom: 40px; /* Space at the bottom of the page */
+  width: 100%;
+}
+
+/* Ensure the card fills the grid cell */
+.repo-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Forces cards to stretch to equal height */
+  box-sizing: border-box; /* Prevents padding from breaking layout */
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+/* --- Command Center / Search Styles --- */
+.search-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.search-header h2 {
+  font-family: var(--font-mono);
+  color: var(--accent-primary);
+  margin-bottom: 0.5rem;
+}
+
+.search-header p {
+  color: var(--text-secondary);
+}
+
+.search-bar-container {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.search-group {
+  width: 100%;
+}
+
+.filter-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.search-input, .search-select {
+  background: var(--bg-app);
+  border: 1px solid #444c56;
+  color: var(--text-primary);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-family: var(--font-sans);
+  width: 100%;
+  box-sizing: border-box; /* Important for padding */
+}
+
+.search-input:focus, .search-select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.search-btn {
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  padding: 0 24px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.search-btn:hover {
+  background: #1f6feb; /* Darker blue */
+}
+
+/* --- Modal Styles --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75); /* Dim background */
+  backdrop-filter: blur(5px); /* Blur effect behind modal */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: #0d1117;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 800px;
+  height: 85vh; /* Take up most of the vertical screen */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #161b22;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-title {
+  color: var(--accent-primary);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+.modal-body {
+  padding: 24px;
+  overflow-y: auto; /* Scrollable content */
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* Markdown Specific Styles */
+.markdown-body h1, .markdown-body h2 {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.3em;
+  margin-top: 1.5em;
+  color: #fff;
+}
+
+.markdown-body pre {
+  background: #161b22;
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+}
+
+.markdown-body code {
+  font-family: var(--font-mono);
+  background: rgba(110, 118, 129, 0.4);
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  font-size: 85%;
+}
+
+.markdown-body img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+/* --- Pagination & Loading --- */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  margin: 40px 0;
+}
+
+.load-more-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--accent-primary);
+  padding: 12px 30px;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.5px;
+}
+
+.load-more-btn:hover {
+  background: var(--bg-panel);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 15px rgba(47, 129, 247, 0.1);
+  transform: translateY(-2px);
+}
+
+.loading-indicator {
+  text-align: center;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  padding: 2rem;
+  font-style: italic;
+}
+
+.error-banner {
+  background: rgba(248, 81, 73, 0.1); /* Red tint */
+  border: 1px solid #da3633;
+  color: #ff7b72;
+  padding: 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.end-message {
+  text-align: center;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  margin-top: 2rem;
+  opacity: 0.5;
+}
+
+/* --- Hidden Gems Section --- */
+.gems-header {
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+}
+
+.gem-section {
+  margin-bottom: 4rem;
+  padding: 1.5rem;
+  background: rgba(22, 27, 34, 0.5); /* Very subtle offset background */
+  border: 1px dashed var(--border-color); /* Dashed border implies "under construction" or "rough gem" */
+  border-radius: var(--radius);
+}
+
+.gem-description {
+  margin-bottom: 1.5rem;
+  border-left: 3px solid var(--accent-primary);
+  padding-left: 1rem;
+}
+
+/* Mobile responsive for filters */
+@media (max-width: 600px) {
+  .filter-group {
+    flex-direction: column;
+  }
+  .search-btn {
+    padding: 12px;
+  }
+}
