@@ -9,8 +9,7 @@ const SearchBar = ({ onSearch }) => {
     e.preventDefault();
     if (!term) return;
 
-    // Construct GitHub API Query
-    // Example: q=react+language:python&sort=stars&order=desc
+    
     let query = `q=${term}`;
     if (language) query += `+language:${language}`;
     query += `&sort=${sort}&order=desc`;

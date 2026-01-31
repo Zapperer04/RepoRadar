@@ -2,10 +2,7 @@ import React from 'react';
 import RepoList from './RepoList';
 
 const HiddenGems = () => {
-  // LOGIC: 
-  // 1. stars:100..5000 -> Blocks the "Super Famous" repos, filters out "Zero Star" noise.
-  // 2. pushed:>2024-01-01 -> Ensures the project is actually ALIVE (not abandoned in 2016).
-  // 3. topic:X -> Targets utility.
+  
 
   const gems = [
     {
@@ -48,7 +45,7 @@ const HiddenGems = () => {
             <h3 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>{section.title}</h3>
             <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{section.description}</p>
           </div>
-          <RepoList query={section.query} title="" /> {/* Empty title because we styled it above */}
+          <RepoList query={section.query} title="" />
         </div>
       ))}
     </div>

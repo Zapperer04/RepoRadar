@@ -12,7 +12,6 @@ const Header = () => {
         <p>Index of Underrated Repositories</p>
       </div>
       
-      {/* Navbar moves INSIDE the header for a compact "App" feel */}
       <Navbar />
     </header>
   );

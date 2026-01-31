@@ -8,7 +8,6 @@ const Navbar = () => {
         Trending
       </NavLink>
       
-      {/* The New Link */}
       <NavLink to="/gems" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
         💎 Hidden Gems
       </NavLink>
@@ -19,6 +18,10 @@ const Navbar = () => {
       
       <NavLink to="/categories" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
         Categories
+      </NavLink>
+
+      <NavLink to="/favorites" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
+        ❤️ Stash
       </NavLink>
     </nav>
   );

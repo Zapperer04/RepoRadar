@@ -1,44 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw'; // <--- NEW IMPORT
 
 const RepoModal = ({ repo, onClose }) => {
   const [readme, setReadme] = useState('');
   const [loading, setLoading] = useState(true);
+  
+  // AI State
+  const [summary, setSummary] = useState(null);
+  const [explaining, setExplaining] = useState(false);
 
   useEffect(() => {
     if (!repo) return;
 
     const fetchReadme = async () => {
       setLoading(true);
-      setReadme(''); // Clear previous content
+      setReadme('');
+      setSummary(null);
 
       try {
-        // 1. Parse the owner and repo name from the full string
-        // Example: "facebook/react" -> owner="facebook", name="react"
         const [owner, name] = repo.full_name.split('/');
-
-        // 2. Hit your Local Server
+        // Connect to your backend
         const res = await fetch(`http://localhost:5000/api/readme/${owner}/${name}`);
         
-        if (!res.ok) {
-          throw new Error('Failed to fetch readme');
-        }
+        if (!res.ok) throw new Error('Failed to fetch readme');
 
         const data = await res.json();
-        
-        // 3. Decode the content (GitHub API sends Base64)
         if (data.content) {
-          // 'atob' decodes Base64 to string
-          // We use a safe decode for UTF-8 characters
           const decodedContent = decodeURIComponent(escape(atob(data.content)));
           setReadme(decodedContent);
         } else {
-          setReadme('*No README.md found for this repository.*');
+          setReadme('*No README.md found.*');
         }
       } catch (error) {
         console.error(error);
-        setReadme(`### ⚠️ Readme Unavailable\n\nCould not load documentation. You can view it directly on [GitHub](${repo.html_url}).`);
+        setReadme(`### ⚠️ Readme Unavailable\n\nView on [GitHub](${repo.html_url}).`);
       } finally {
         setLoading(false);
       }
@@ -46,6 +43,26 @@ const RepoModal = ({ repo, onClose }) => {
 
     fetchReadme();
   }, [repo]);
+
+  const handleExplain = async () => {
+    if (!readme || readme.length < 50) return;
+    
+    setExplaining(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: readme })
+      });
+      
+      const data = await res.json();
+      setSummary(data.summary);
+    } catch (error) {
+      setSummary("Sorry, I couldn't summarize this repo right now.");
+    } finally {
+      setExplaining(false);
+    }
+  };
 
   if (!repo) return null;
 
@@ -64,12 +81,34 @@ const RepoModal = ({ repo, onClose }) => {
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
         
+        {/* AI Toolbar */}
+        <div className="ai-toolbar">
+          {!summary && !explaining && (
+            <button className="explain-btn" onClick={handleExplain}>
+              ✨ Explain like I'm 5
+            </button>
+          )}
+          
+          {explaining && <div className="ai-loading">🤖 AI is reading the code...</div>}
+          
+          {summary && (
+            <div className="ai-summary-box">
+              <strong>🤖 AI Summary:</strong>
+              <p>{summary}</p>
+            </div>
+          )}
+        </div>
+
         <div className="modal-body">
           {loading ? (
             <div className="loading-spinner">Fetching documentation...</div>
           ) : (
             <div className="markdown-body">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {/* 👇 THE FIX IS HERE: rehypePlugins={[rehypeRaw]} */}
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]} 
+                rehypePlugins={[rehypeRaw]}
+              >
                 {readme}
               </ReactMarkdown>
             </div>

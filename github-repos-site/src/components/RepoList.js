@@ -10,14 +10,12 @@ const RepoList = ({ query, title }) => {
   const [selectedRepo, setSelectedRepo] = useState(null);
   const [error, setError] = useState(null);
 
-  // Reset state when the search query changes
   useEffect(() => {
     setRepos([]);
     setPage(1);
     setHasMore(true);
     setError(null);
     fetchRepos(1, query, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   const fetchRepos = async (pageNum, searchQuery, isNewSearch) => {
@@ -27,7 +25,7 @@ const RepoList = ({ query, title }) => {
     setError(null);
 
     try {
-      // Check Session Storage (Client-side Cache)
+      
       const cacheKey = `${searchQuery}&page=${pageNum}`;
       const cached = sessionStorage.getItem(cacheKey);
 
@@ -43,8 +41,6 @@ const RepoList = ({ query, title }) => {
         return; // Exit early if cached
       }
 
-      // --- THE CHANGE: Hit your Local Server ---
-      // We use encodeURIComponent on the query to handle spaces and special chars safely
       const response = await fetch(`http://localhost:5000/api/search?q=${encodeURIComponent(searchQuery)}&page=${pageNum}&per_page=30`);
       
       if (!response.ok) {
@@ -57,7 +53,6 @@ const RepoList = ({ query, title }) => {
 
       if (items.length === 0) setHasMore(false);
 
-      // Save to Cache
       sessionStorage.setItem(cacheKey, JSON.stringify(items));
 
       if (isNewSearch) {
@@ -67,7 +62,7 @@ const RepoList = ({ query, title }) => {
       }
     } catch (err) {
       console.error("Fetch error:", err);
-      // Friendly error message if backend is down
+      
       if (err.message.includes("Failed to fetch")) {
         setError("Cannot connect to server. Is 'node index.js' running?");
       } else {
@@ -96,7 +91,6 @@ const RepoList = ({ query, title }) => {
 
       <div className="repo-list">
         {repos.map((repo, index) => (
-          // Using a composite key to prevent React warnings on duplicates
           <div 
             key={`${repo.id}-${index}`} 
             onClick={() => setSelectedRepo(repo)} 
