@@ -9,10 +9,10 @@ const SearchBar = ({ onSearch }) => {
     e.preventDefault();
     if (!term) return;
 
-    
-    let query = `q=${term}`;
-    if (language) query += `+language:${language}`;
-    query += `&sort=${sort}&order=desc`;
+    const encodedTerm = encodeURIComponent(term.trim());
+    let query = `q=${encodedTerm}`;
+    if (language) query += `+language:${encodeURIComponent(language)}`;
+    query += `&sort=${encodeURIComponent(sort)}&order=desc`;
 
     onSearch(query);
   };

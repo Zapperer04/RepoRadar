@@ -9,29 +9,32 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 const TOKEN = process.env.GITHUB_TOKEN;
+const githubHeaders = TOKEN ? { Authorization: `token ${TOKEN}` } : {};
 
 // --- DEBUGGING: Check if Key Exists ---
 const groqKey = process.env.GROQ_API_KEY;
 if (!groqKey) {
-  console.error("❌ FATAL ERROR: GROQ_API_KEY is missing from .env file!");
+  console.error("❌ WARNING: GROQ_API_KEY is missing from .env file! AI explain features will be disabled.");
 } else {
   console.log("✅ Groq API Key loaded");
 }
 
 const groq = new Groq({
-    apiKey: groqKey || "dummy_key" 
+    apiKey: groqKey || "dummy_key"
 });
 
 // 1. Search Proxy
 app.get('/api/search', async (req, res) => {
   try {
-    const query = req.query.q;
+    const query = new URLSearchParams(req.query).toString();
     const response = await axios.get(`https://api.github.com/search/repositories?${query}`, {
-      headers: { Authorization: `token ${TOKEN}` }
+      headers: githubHeaders
     });
     res.json(response.data);
   } catch (error) {
-    res.status(500).json({ error: 'Search failed' });
+    console.error('Search error:', error.response?.status, error.response?.data || error.message);
+    const message = error.response?.data?.message || 'Search failed';
+    res.status(error.response?.status || 500).json({ error: message });
   }
 });
 
@@ -40,7 +43,7 @@ app.get('/api/readme/:owner/:repo', async (req, res) => {
   try {
     const { owner, repo } = req.params;
     const response = await axios.get(`https://api.github.com/repos/${owner}/${repo}/readme`, {
-      headers: { Authorization: `token ${TOKEN}` }
+      headers: githubHeaders
     });
     res.json(response.data);
   } catch (error) {

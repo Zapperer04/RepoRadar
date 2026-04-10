@@ -41,7 +41,7 @@ const RepoList = ({ query, title }) => {
         return; // Exit early if cached
       }
 
-      const response = await fetch(`http://localhost:5000/api/search?q=${encodeURIComponent(searchQuery)}&page=${pageNum}&per_page=30`);
+      const response = await fetch(`http://localhost:5000/api/search?${searchQuery}&page=${pageNum}&per_page=30`);
       
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
@@ -64,7 +64,7 @@ const RepoList = ({ query, title }) => {
       console.error("Fetch error:", err);
       
       if (err.message.includes("Failed to fetch")) {
-        setError("Cannot connect to server. Is 'node index.js' running?");
+        setError("Cannot connect to server. Is 'node server/index.js' running?");
       } else {
         setError(err.message);
       }

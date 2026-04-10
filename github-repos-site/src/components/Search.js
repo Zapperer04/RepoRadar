@@ -7,12 +7,13 @@ const Search = () => {
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(null);
 
+  const rawQuery = searchParams.get('q');
+
   useEffect(() => {
-    const urlQuery = searchParams.get('q');
-    if (urlQuery) {
-      setQuery(`q=${urlQuery}`); 
+    if (rawQuery) {
+      setQuery(`q=${encodeURIComponent(rawQuery)}`);
     }
-  }, [searchParams]);
+  }, [rawQuery]);
 
   return (
     <div className="search-page">
@@ -25,7 +26,10 @@ const Search = () => {
 
       {query && (
         <div style={{ marginTop: '2rem' }}>
-          <RepoList query={query} title={query.includes('topic:') ? `Exploring Topic: ${searchParams.get('q').replace('topic:', '')}` : "Search Results"} />
+          <RepoList
+            query={query}
+            title={rawQuery?.includes('topic:') ? `Exploring Topic: ${rawQuery.replace('topic:', '')}` : "Search Results"}
+          />
         </div>
       )}
     </div>
