@@ -92,10 +92,13 @@ export const auth = {
 /**
  * Repository Search & Data
  */
-export async function searchRepositories(query, page = 1, perPage = 30) {
+export async function searchRepositories(query, page = 1, perPage = 30, sort = 'stars', order = 'desc') {
   if (!query) throw new Error('Search query is required');
-  const cleanQuery = query.startsWith('q=') ? query : `q=${query}`;
-  return apiCall(`/api/search?${cleanQuery}&page=${page}&per_page=${perPage}`);
+  
+  // Use manual construction to preserve GitHub's specific character encoding (+, :, >)
+  const queryString = `q=${query}&page=${page}&per_page=${perPage}&sort=${sort}&order=${order}`;
+  
+  return apiCall(`/api/search?${queryString}`);
 }
 
 export async function fetchReadme(owner, repo) {

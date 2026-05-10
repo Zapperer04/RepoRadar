@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import RepoList from './RepoList';
 
 const topicTrees = [
@@ -59,54 +59,61 @@ const topicTrees = [
 
 const Categories = () => {
   const [activeTreeId, setActiveTreeId] = useState(topicTrees[0].id);
-  const [activeSubtopic, setActiveSubtopic] = useState(null);
+  const [activeSubtopic, setActiveSubtopic] = useState(topicTrees[0].subtopics[0]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const modalRef = useRef();
 
-  // Advanced Filter State
-  const [filters, setFilters] = useState({
+  const [appliedFilters, setAppliedFilters] = useState({
     sort: 'stars',
     minStars: '0',
-    recency: 'all',
-    type: 'all'
+    recency: 'all'
   });
 
+  const [stagedFilters, setStagedFilters] = useState({ ...appliedFilters });
+
   useEffect(() => {
-    if (!activeSubtopic) {
-      setActiveSubtopic(topicTrees[0].subtopics[0]);
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setIsFilterModalOpen(false);
+      }
+    };
+    if (isFilterModalOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
     }
-  }, [activeSubtopic]);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isFilterModalOpen]);
+
+  const handleTreeClick = (tree) => {
+    setActiveTreeId(tree.id);
+    if (tree.subtopics && tree.subtopics.length > 0) {
+      setActiveSubtopic(tree.subtopics[0]);
+    }
+  };
+
+  const getCleanSearchQuery = () => {
+    if (!activeSubtopic) return '';
+    let q = activeSubtopic.query;
+    if (appliedFilters.minStars !== '0') q += `+stars:>${appliedFilters.minStars}`;
+    if (appliedFilters.recency !== 'all') {
+      const date = new Date();
+      if (appliedFilters.recency === 'day') date.setDate(date.getDate() - 1);
+      if (appliedFilters.recency === 'week') date.setDate(date.getDate() - 7);
+      if (appliedFilters.recency === 'month') date.setDate(date.getDate() - 30);
+      q += `+pushed:>${date.toISOString().split('T')[0]}`;
+    }
+    return q;
+  };
+
+  const applyFilters = () => {
+    setAppliedFilters({ ...stagedFilters });
+    setIsFilterModalOpen(false);
+  };
 
   const filteredTrees = topicTrees.filter(tree => 
     tree.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     tree.subtopics.some(sub => sub.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-
-  const getFullQuery = () => {
-    if (!activeSubtopic) return '';
-    let q = activeSubtopic.query;
-    
-    // Add Star Filter
-    if (filters.minStars !== '0') q += `+stars:>${filters.minStars}`;
-    
-    // Add Recency Filter
-    if (filters.recency !== 'all') {
-      const date = new Date();
-      if (filters.recency === 'day') date.setDate(date.getDate() - 1);
-      if (filters.recency === 'week') date.setDate(date.getDate() - 7);
-      if (filters.recency === 'month') date.setDate(date.getDate() - 30);
-      q += `+pushed:>${date.toISOString().split('T')[0]}`;
-    }
-
-    // Add Type Filter
-    if (filters.type !== 'all') q += `+topic:${filters.type}`;
-
-    return `${q}&sort=${filters.sort}&order=desc`;
-  };
-
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
 
   return (
     <div className="topic-explorer-page">
@@ -116,7 +123,7 @@ const Categories = () => {
             <input 
               type="text" 
               className="search-input" 
-              placeholder="Filter domains..." 
+              placeholder="Search domains..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -128,7 +135,7 @@ const Categories = () => {
               <div key={tree.id} className="domain-cluster">
                 <div 
                   className={`domain-row ${activeTreeId === tree.id ? 'active' : ''}`}
-                  onClick={() => setActiveTreeId(tree.id)}
+                  onClick={() => handleTreeClick(tree)}
                 >
                   <span className="domain-icon">{tree.icon}</span>
                   <span className="domain-name">{tree.name}</span>
@@ -153,75 +160,96 @@ const Categories = () => {
         </aside>
 
         <main className="explorer-main">
-          <header className="explorer-header">
+          <header className="explorer-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 3rem' }}>
             <div className="header-text">
-              <h2 className="explorer-title">
-                {activeSubtopic ? activeSubtopic.name : "Select a Domain"}
+              <h2 className="explorer-title" style={{ margin: 0 }}>
+                {activeSubtopic ? activeSubtopic.name : "Discovery Hub"}
               </h2>
-              <p className="explorer-subtitle">
-                Auditing the {activeSubtopic?.name} technical landscape.
+              <p className="explorer-subtitle" style={{ margin: 0, opacity: 0.6 }}>
+                Landscape Audit | {appliedFilters.sort.toUpperCase()}
               </p>
             </div>
             
-            <div className="filter-wrapper" style={{ position: 'relative' }}>
-              <button 
-                className="search-btn" 
-                onClick={() => setShowFilters(!showFilters)}
-                style={{ background: showFilters ? 'var(--bg-tertiary)' : 'var(--accent-gradient)' }}
-              >
-                🛠️ {showFilters ? 'Close Refinement' : 'Refine Intelligence'}
-              </button>
+            <button 
+              className="search-btn" 
+              onClick={() => {
+                setStagedFilters({ ...appliedFilters });
+                setIsFilterModalOpen(true);
+              }}
+              style={{ padding: '0.6rem 1.5rem', borderRadius: '50px' }}
+            >
+              ⚙️ Filters
+            </button>
+          </header>
 
-              {showFilters && (
-                <div className="refinement-panel" style={{ 
-                  position: 'absolute', top: '120%', right: 0, width: '320px', 
-                  background: 'var(--bg-secondary)', border: '2px solid var(--accent-primary)',
-                  padding: '1.5rem', borderRadius: 'var(--radius-lg)', zIndex: 50,
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
-                }}>
-                  <div className="filter-group-alt" style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>SORTING LOGIC</label>
-                    <select className="search-select" style={{ width: '100%', marginTop: '0.5rem' }} value={filters.sort} onChange={(e) => handleFilterChange('sort', e.target.value)}>
-                      <option value="stars">Most Stars</option>
-                      <option value="updated">Recently Updated</option>
-                      <option value="forks">Most Forks</option>
-                    </select>
-                  </div>
-
-                  <div className="filter-group-alt" style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>RECENCY PULSE</label>
-                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                      {['all', 'day', 'week', 'month'].map(p => (
-                        <button key={p} onClick={() => handleFilterChange('recency', p)} style={{ 
-                          flex: 1, padding: '0.4rem', fontSize: '0.7rem', borderRadius: '4px', border: '1px solid var(--border-color)',
-                          background: filters.recency === p ? 'var(--accent-primary)' : 'transparent',
-                          color: filters.recency === p ? 'white' : 'var(--text-secondary)'
-                        }}>
-                          {p.toUpperCase()}
+          {isFilterModalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-content" ref={modalRef} style={{ maxWidth: '500px', height: 'auto' }}>
+                <div className="modal-header">
+                  <h3 style={{ margin: 0 }}>Refine Results</h3>
+                  <button onClick={() => setIsFilterModalOpen(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+                </div>
+                
+                <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  <div className="console-section">
+                    <h4 className="console-label">Sort By</h4>
+                    <div className="button-group-tabs">
+                      {['stars', 'updated', 'forks'].map(s => (
+                        <button 
+                          key={s} 
+                          onClick={() => setStagedFilters(p => ({ ...p, sort: s }))} 
+                          className={stagedFilters.sort === s ? 'active' : ''}
+                        >
+                          {s.toUpperCase()}
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  <div className="filter-group-alt">
-                    <label style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)' }}>PROJECT DENSITY</label>
-                    <select className="search-select" style={{ width: '100%', marginTop: '0.5rem' }} value={filters.minStars} onChange={(e) => handleFilterChange('minStars', e.target.value)}>
-                      <option value="0">Any Density</option>
+                  <div className="console-section">
+                    <h4 className="console-label">Timeline Pulse</h4>
+                    <div className="button-group-tabs">
+                      {['all', 'day', 'week', 'month'].map(r => (
+                        <button 
+                          key={r} 
+                          onClick={() => setStagedFilters(p => ({ ...p, recency: r }))} 
+                          className={stagedFilters.recency === r ? 'active' : ''}
+                        >
+                          {r.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="console-section">
+                    <h4 className="console-label">Project Density</h4>
+                    <select 
+                      className="search-select console-select" 
+                      value={stagedFilters.minStars} 
+                      onChange={(e) => setStagedFilters(p => ({ ...p, minStars: e.target.value }))}
+                    >
+                      <option value="0">Any Star Count</option>
                       <option value="1000">Gems (>1k)</option>
                       <option value="10000">Leaders (>10k)</option>
                       <option value="50000">Giants (>50k)</option>
                     </select>
                   </div>
+
+                  <button className="search-btn" onClick={applyFilters} style={{ width: '100%', marginTop: '1rem', padding: '1rem' }}>
+                    Apply Filters
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
-          </header>
+          )}
 
           <div className="explorer-scroll-container">
             {activeSubtopic && (
               <RepoList 
-                key={`${activeSubtopic.id}-${JSON.stringify(filters)}`}
-                query={getFullQuery()} 
+                key={`${activeSubtopic.id}-${JSON.stringify(appliedFilters)}`}
+                query={getCleanSearchQuery()} 
+                sort={appliedFilters.sort}
+                order="desc"
                 title="" 
               />
             )}

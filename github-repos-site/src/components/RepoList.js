@@ -18,7 +18,7 @@ const RepoSkeleton = ({ layout }) => {
   );
 };
 
-const RepoList = ({ query, title, layout = 'grid', limit }) => {
+const RepoList = ({ query, title, layout = 'grid', limit, sort = 'stars', order = 'desc' }) => {
   const [repos, setRepos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -44,41 +44,47 @@ const RepoList = ({ query, title, layout = 'grid', limit }) => {
     setLoading(true);
     setError(null);
 
+    // If it's a new search, clear current results immediately to avoid cache-overlap
+    if (isNewSearch) setRepos([]);
+
     try {
-      const cacheKey = `${searchQuery}&page=${pageNum}`;
+      // Use a more robust cache key that includes the query, page, and sort
+      const cacheKey = `goat_audit_${searchQuery}_s${sort}_p${pageNum}`;
       const cached = sessionStorage.getItem(cacheKey);
 
-      if (cached) {
+      if (cached && !isNewSearch) {
         const data = JSON.parse(cached);
-        if (isNewSearch) setRepos(data);
-        else setRepos(prev => [...prev, ...data]);
+        setRepos(prev => [...prev, ...data]);
         setLoading(false);
         if (data.length === 0) setHasMore(false);
         return;
       }
 
       const fetchCount = limit || (layout === 'grid' ? 30 : 10);
-      const data = await searchRepositories(searchQuery, pageNum, fetchCount);
+      const data = await searchRepositories(searchQuery, pageNum, fetchCount, sort, order);
       const items = data.items || [];
 
       if (items.length === 0) setHasMore(false);
+      
+      // Cache results for subsequent pages, but allow fresh fetches for new query strings
       sessionStorage.setItem(cacheKey, JSON.stringify(items));
 
       if (isNewSearch) setRepos(items);
       else setRepos(prev => [...prev, ...items]);
     } catch (err) {
       setError(err.message || 'Failed to fetch repositories');
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
-  }, [layout, limit]);
+  }, [layout, limit, sort, order]);
 
   useEffect(() => {
     setRepos([]);
     setPage(1);
     setHasMore(true);
     fetchRepos(1, query, true);
-  }, [query, fetchRepos]);
+  }, [query, sort, order, fetchRepos]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
