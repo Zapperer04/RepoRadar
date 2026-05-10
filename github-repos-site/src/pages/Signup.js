@@ -66,7 +66,7 @@ const Signup = () => {
       <div className="auth-card">
         <header className="page-header" style={{ marginBottom: '2rem' }}>
           <h1 className="page-title" style={{ fontSize: '2rem' }}>🐐 Join the Herd</h1>
-          <p className="page-subtitle">Start tracking underrrated repositories</p>
+          <p className="page-subtitle">Start tracking underrated repositories</p>
         </header>
 
         {error && <div className="error-banner">⚠️ {error}</div>}

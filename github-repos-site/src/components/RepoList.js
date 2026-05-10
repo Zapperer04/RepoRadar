@@ -43,6 +43,7 @@ const RepoList = ({ query, title, layout = 'grid', limit, sort = 'stars', order 
     
     setLoading(true);
     setError(null);
+    console.log(`[REPO_FETCH_START] Query: ${searchQuery}, Page: ${pageNum}, IsNew: ${isNewSearch}`);
 
     // If it's a new search, clear current results immediately to avoid cache-overlap
     if (isNewSearch) setRepos([]);
@@ -53,6 +54,7 @@ const RepoList = ({ query, title, layout = 'grid', limit, sort = 'stars', order 
       const cached = sessionStorage.getItem(cacheKey);
 
       if (cached && !isNewSearch) {
+        console.log(`[CACHE_HIT] Using cached results for ${cacheKey}`);
         const data = JSON.parse(cached);
         setRepos(prev => [...prev, ...data]);
         setLoading(false);
@@ -61,7 +63,9 @@ const RepoList = ({ query, title, layout = 'grid', limit, sort = 'stars', order 
       }
 
       const fetchCount = limit || (layout === 'grid' ? 30 : 10);
+      console.log(`[API_SEARCH_CALL] About to call searchRepositories with: ${searchQuery}`);
       const data = await searchRepositories(searchQuery, pageNum, fetchCount, sort, order);
+      console.log(`[API_SEARCH_SUCCESS] Got data with ${data.items?.length || 0} items`);
       const items = data.items || [];
 
       if (items.length === 0) setHasMore(false);
@@ -72,6 +76,7 @@ const RepoList = ({ query, title, layout = 'grid', limit, sort = 'stars', order 
       if (isNewSearch) setRepos(items);
       else setRepos(prev => [...prev, ...items]);
     } catch (err) {
+      console.error(`[API_SEARCH_ERROR] ${err.message}`);
       setError(err.message || 'Failed to fetch repositories');
       setHasMore(false);
     } finally {

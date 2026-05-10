@@ -4,10 +4,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { auth as authApi } from '../utils/apiClient';
+import { auth as authApi, user as userApi } from '../utils/apiClient';
 
 const Profile = () => {
-  const { user, getToken } = useAuth();
+  const { user } = useAuth();
   const [profileData, setProfileData] = useState(user || {});
   const [stats, setStats] = useState({});
   const [isEditing, setIsEditing] = useState(false);
@@ -44,22 +44,12 @@ const Profile = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/profile`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getToken()}`,
-        },
-        body: JSON.stringify({
-          fullName: profileData.full_name,
-          avatarUrl: profileData.avatar_url,
-          bio: profileData.bio,
-        }),
+      const data = await userApi.updateProfile({
+        fullName: profileData.full_name,
+        avatarUrl: profileData.avatar_url,
+        bio: profileData.bio,
       });
 
-      if (!response.ok) throw new Error('Failed to update profile');
-
-      const data = await response.json();
       setProfileData(data.user);
       setIsEditing(false);
       setSuccess('Profile updated successfully');

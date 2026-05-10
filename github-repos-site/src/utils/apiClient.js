@@ -3,7 +3,7 @@
  * Centralized API communication with built-in error handling and timeouts
  */
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_URL = 'http://localhost:5005';  // Hardcoded for testing
 const DEFAULT_TIMEOUT = 15000; // 15 seconds
 
 /**
@@ -20,7 +20,10 @@ function createAbortController(timeoutMs = DEFAULT_TIMEOUT) {
  */
 async function apiCall(endpoint, options = {}) {
   const targetUrl = `${API_URL}${endpoint}`;
-  console.log(`[NETWORK] Discovery Request: ${targetUrl}`);
+  // TEMPORARY DEBUG
+  window.DEBUG_API_CALLS = (window.DEBUG_API_CALLS || 0) + 1;
+  console.log(`[API_CALL_${window.DEBUG_API_CALLS}] Making request to: ${targetUrl}`);
+  console.log(`[NETWORK] 🌐 REQUEST: ${options.method || 'GET'} ${targetUrl}`);
   const { controller, timeoutId } = createAbortController(options.timeout || DEFAULT_TIMEOUT);
   
   // Add authentication header if token exists
@@ -61,7 +64,7 @@ async function apiCall(endpoint, options = {}) {
     console.error(`[NETWORK] Total Bridge Collapse: ${error.message}`);
     
     if (error.name === 'AbortError') {
-      throw new Error('Connection Timeout: The infrastructure at Port 5000 is too slow to respond.');
+      throw new Error(`Connection Timeout: The backend at ${API_URL} is too slow to respond.`);
     }
     
     if (error.message.includes('Failed to fetch')) {
@@ -139,6 +142,11 @@ export const user = {
   createCollection: (name, description) => apiCall('/api/collections', {
     method: 'POST',
     body: JSON.stringify({ name, description })
+  }),
+  
+  updateProfile: (profileData) => apiCall('/api/user/profile', {
+    method: 'PUT',
+    body: JSON.stringify(profileData)
   })
 };
 

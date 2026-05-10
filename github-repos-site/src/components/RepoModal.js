@@ -54,14 +54,14 @@ const RepoModal = ({ repo, onClose }) => {
       setLoadingReadme(true);
       setErrorDetails(null);
 
-      // Watchdog: Terminate hang if no response in 12s
+      // Watchdog: Terminate hang if no response in 20s (increased from 12s)
       watchdogRef.current = setTimeout(() => {
         if (isMounted && !readme) {
           setDebugStatus('TIMEOUT_WATCHDOG_TRIGGERED');
-          setErrorDetails('The data bridge is unresponsive. Port 5000 is not returning any documentation.');
+          setErrorDetails(`The data bridge is unresponsive. Backend at ${process.env.REACT_APP_API_URL} is not returning any documentation.`);
           setLoadingReadme(false);
         }
-      }, 12000);
+      }, 20000);
 
       try {
         setDebugStatus('FETCHING_FROM_BACKEND');
@@ -121,7 +121,7 @@ const RepoModal = ({ repo, onClose }) => {
                 <div className="technical-loader"></div>
                 <p>CONNECTING TO GITHUB INFRASTRUCTURE...</p>
                 <div className="debug-telemetry-pill">
-                  STATUS: {debugStatus} | PORT: 5000
+                  STATUS: {debugStatus} | {process.env.REACT_APP_API_URL}
                 </div>
               </div>
             ) : errorDetails ? (
