@@ -1,393 +1,138 @@
 const express = require('express');
 const cors = require('cors');
-const rateLimit = require('express-rate-limit');
 const axios = require('axios');
-const Groq = require('groq-sdk');
+const path = require('path');
 require('dotenv').config();
 
-// Import database and routes
-const { initializeDatabase } = require('./db/init');
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/user');
-const favoritesRoutes = require('./routes/favorites');
-const historyRoutes = require('./routes/history');
-const collectionsRoutes = require('./routes/collections');
-
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// ============================================================================
-// ENVIRONMENT VALIDATION - Check required env vars on startup
-// ============================================================================
-const requiredEnvVars = ['GITHUB_TOKEN', 'GROQ_API_KEY', 'PORT', 'JWT_SECRET', 'DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
-const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-if (missingEnvVars.length > 0) {
-  console.error('❌ FATAL: Missing required environment variables:');
-  missingEnvVars.forEach(varName => console.error(`   - ${varName}`));
-  console.error('   Please create a .env file using .env.example as a template');
-  process.exit(1);
-}
-
-console.log('✅ All required environment variables loaded');
-
-// ============================================================================
-// CORS CONFIGURATION - Allow all origins in development
-// ============================================================================
-if (process.env.NODE_ENV === 'development') {
-  app.use(cors());  // Allow all origins in development
-} else {
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  app.use(cors({
-    origin: frontendUrl,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    optionsSuccessStatus: 200
-  }));
-}
-
-// ============================================================================
-// MIDDLEWARE
-// ============================================================================
-app.use(express.json({ limit: '10mb' }));
-
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  next();
-});
-
-// Rate limiting - max 100 requests per 15 minutes per IP
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.RATE_LIMIT_MAX || 100, // limit each IP to 100 requests per windowMs
-  message: { error: 'Too many requests from this IP, please try again later.' },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-});
-
-// Apply rate limiting to API endpoints
-app.use('/api/', limiter);
-
-// ============================================================================
-// CONFIGURATION
-// ============================================================================
+// GitHub API Configuration
 const TOKEN = process.env.GITHUB_TOKEN;
-const githubHeaders = TOKEN ? { Authorization: `token ${TOKEN}` } : {};
-const AXIOS_TIMEOUT = 10000; // 10 second timeout for API calls
-const MAX_CONTENT_LENGTH = 20000; // Max characters for AI processing
-
-// Initialize Groq client
-const groqKey = process.env.GROQ_API_KEY;
-const groq = new Groq({ apiKey: groqKey });
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
+const githubHeaders = TOKEN ? { 
+  'Authorization': `token ${TOKEN}`,
+  'User-Agent': 'Goat-Repo-Finder-Audit'
+} : {
+  'User-Agent': 'Goat-Repo-Finder-Audit'
+};
 
 /**
- * Validates search query parameters
- */
-function validateSearchQuery(queryObj) {
-  const errors = [];
-  
-  if (!queryObj.q) {
-    errors.push('Query parameter "q" is required');
-  }
-  
-  if (queryObj.per_page) {
-    const perPage = parseInt(queryObj.per_page);
-    if (isNaN(perPage) || perPage < 1 || perPage > 100) {
-      errors.push('per_page must be between 1 and 100');
-    }
-  }
-  
-  if (queryObj.page) {
-    const page = parseInt(queryObj.page);
-    if (isNaN(page) || page < 1) {
-      errors.push('page must be a positive integer');
-    }
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-}
-
-/**
- * Validates repository owner and name
- */
-function validateRepoPath(owner, repo) {
-  const errors = [];
-  const repoRegex = /^[a-zA-Z0-9._-]+$/;
-  
-  if (!owner || !repo) {
-    errors.push('Owner and repo name are required');
-  } else {
-    if (!repoRegex.test(owner)) {
-      errors.push('Invalid owner name format');
-    }
-    if (!repoRegex.test(repo)) {
-      errors.push('Invalid repo name format');
-    }
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-}
-
-// ============================================================================
-// API ENDPOINTS
-// ============================================================================
-
-/**
- * Health check endpoint
+ * Health Check Endpoint
  */
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    groqEnabled: !!groqKey
-  });
+  res.json({ status: 'active', timestamp: new Date().toISOString() });
 });
 
 /**
- * Search repositories proxy
+ * Search Repositories Endpoint
  */
 app.get('/api/search', async (req, res) => {
   try {
-    // Validate input
-    const validation = validateSearchQuery(req.query);
-    if (!validation.isValid) {
-      return res.status(400).json({ 
-        error: 'Invalid query parameters',
-        details: validation.errors 
-      });
-    }
-
-    const query = new URLSearchParams(req.query).toString();
-    const response = await axios.get(
-      `https://api.github.com/search/repositories?${query}`,
-      {
-        headers: githubHeaders,
-        timeout: AXIOS_TIMEOUT
-      }
-    );
+    const { q, page, per_page, sort, order } = req.query;
+    const queryString = `q=${q}&page=${page || 1}&per_page=${per_page || 30}&sort=${sort || 'stars'}&order=${order || 'desc'}`;
+    
+    const response = await axios.get(`https://api.github.com/search/repositories?${queryString}`, {
+      headers: githubHeaders,
+      timeout: 15000
+    });
     
     res.json(response.data);
   } catch (error) {
-    console.error('Search error:', error.response?.status, error.response?.data || error.message);
-    
-    // Handle rate limiting
-    if (error.response?.status === 422) {
-      return res.status(422).json({ 
-        error: 'Invalid search query. Please check your filters.' 
-      });
-    }
-    
-    if (error.response?.status === 403) {
-      return res.status(403).json({ 
-        error: 'GitHub API rate limit exceeded. Please try again later.' 
-      });
-    }
-
-    const message = error.response?.data?.message || error.message || 'Search failed';
-    res.status(error.response?.status || 500).json({ error: message });
+    console.error('Search error:', error.message);
+    res.status(error.response?.status || 500).json({ error: error.message });
   }
 });
 
 /**
- * Fetch README proxy
+ * Fetch README with Robust Parallel Failover
  */
 app.get('/api/readme/:owner/:repo', async (req, res) => {
+  const { owner, repo } = req.params;
+  console.log(`[AUDIT START] ${owner}/${repo}`);
+
+  // Layer 1: GitHub API Attempt
   try {
-    const { owner, repo } = req.params;
+    const apiRes = await axios.get(`https://api.github.com/repos/${owner}/${repo}/readme`, {
+      headers: githubHeaders,
+      timeout: 8000
+    });
+    console.log(`[AUDIT] Layer 1 Success`);
+    return res.json(apiRes.data);
+  } catch (apiError) {
+    console.warn(`[AUDIT] Layer 1 Fail, pivoting to Parallel Raw...`);
     
-    // Validate input
-    const validation = validateRepoPath(owner, repo);
-    if (!validation.isValid) {
-      return res.status(400).json({ 
-        error: 'Invalid repository path',
-        details: validation.errors 
+    // Layer 2: Parallel Raw Fetch (Highly Compatible)
+    const branches = ['main', 'master', 'develop'];
+    const extensions = ['.md', '.markdown', ''];
+    const fetchTargets = [];
+
+    branches.forEach(branch => {
+      extensions.forEach(ext => {
+        const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/README${ext}`;
+        fetchTargets.push(
+          axios.get(url, { timeout: 6000 }).then(r => ({
+            content: Buffer.from(r.data.toString()).toString('base64'),
+            encoding: 'base64',
+            source: branch
+          }))
+        );
+      });
+    });
+
+    try {
+      // Manual implementation of "any" for maximum compatibility
+      const results = await Promise.allSettled(fetchTargets);
+      const firstValid = results.find(r => r.status === 'fulfilled');
+      
+      if (firstValid) {
+        console.log(`[AUDIT] Layer 2 Success - Found on branch ${firstValid.value.source}`);
+        return res.json(firstValid.value);
+      }
+      
+      throw new Error('All documentation vectors exhausted');
+    } catch (err) {
+      console.error('[AUDIT] Layer 2 TOTAL FAIL');
+      res.status(apiError.response?.status || 500).json({ 
+        error: `Infrastructure Failure: ${apiError.message}` 
       });
     }
-
-    const response = await axios.get(
-      `https://api.github.com/repos/${owner}/${repo}/readme`,
-      {
-        headers: githubHeaders,
-        timeout: AXIOS_TIMEOUT
-      }
-    );
-    
-    res.json(response.data);
-  } catch (error) {
-    console.error(`README error for ${req.params.owner}/${req.params.repo}:`, error.message);
-    
-    if (error.response?.status === 404) {
-      return res.status(404).json({ error: 'Repository or README not found' });
-    }
-    
-    res.status(error.response?.status || 500).json({ 
-      error: 'Failed to fetch README' 
-    });
   }
 });
 
 /**
- * AI Explanation endpoint
+ * AI Explanation Endpoint
  */
 app.post('/api/explain', async (req, res) => {
-  console.log('🤖 Received AI request...');
-
   try {
     const { content } = req.body;
-    
-    // Validate input
-    if (!content) {
-      return res.status(400).json({ error: 'Content is required' });
-    }
-    
-    if (typeof content !== 'string') {
-      return res.status(400).json({ error: 'Content must be a string' });
-    }
-    
-    if (!groqKey) {
-      throw new Error('Server is missing GROQ_API_KEY');
+    if (!process.env.GROQ_API_KEY) {
+      return res.status(500).json({ error: 'AI Service Key Missing' });
     }
 
-    // Clean and truncate content
-    const cleanContent = content.replace(/!\[.*?\]\(.*?\)/g, '');
-    const truncatedContent = cleanContent.substring(0, MAX_CONTENT_LENGTH);
-
+    const Groq = require('groq-sdk');
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+    
+    const truncatedContent = content ? content.substring(0, 10000) : "No content provided.";
+    
     const completion = await groq.chat.completions.create({
       messages: [
-        { 
-          role: "system", 
-          content: "You are a senior code auditor. Your job is to identify the TECH STACK and ARCHITECTURE. Ignore generic 'About Us' text. If the text is vague, use your internal knowledge about this specific repository to fill in the missing technical details." 
-        },
-        { 
-          role: "user", 
-          content: `Analyze this repository and give me a 2-sentence summary for a senior engineer:
-          1. Exact Tech Stack (Languages, Frameworks, Databases).
-          2. What does the software actually DO?
-          
-          README CONTENT (Truncated):
-          ${truncatedContent}` 
-        }
+        { role: "system", content: "You are a ruthless technical auditor. Provide ONLY a 2-sentence tactical brief. No intros." },
+        { role: "user", content: `Analyze: ${truncatedContent}` }
       ],
       model: "llama-3.3-70b-versatile",
     });
 
-    const summary = completion.choices[0]?.message?.content || "No summary generated.";
-    console.log('✅ Summary generated successfully!');
-    res.json({ summary });
-
+    res.json({ summary: completion.choices[0].message.content });
   } catch (error) {
-    console.error('❌ AI ERROR:', error.message);
-    
-    if (error.message.includes('rate_limit')) {
-      return res.status(429).json({ 
-        error: 'AI service rate limited. Please try again later.' 
-      });
-    }
-    
-    res.status(500).json({ 
-      error: 'Could not generate summary. Please try again or check the README directly.' 
-    });
+    console.error('AI Error:', error.message);
+    res.status(500).json({ error: 'AI Briefing Offline' });
   }
 });
 
-// ============================================================================
-// USER AUTHENTICATION & PERSONALIZATION ROUTES
-// ============================================================================
-
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/favorites', favoritesRoutes);
-app.use('/api/history', historyRoutes);
-app.use('/api/collections', collectionsRoutes);
-
-// ============================================================================
-// ERROR HANDLING
-// ============================================================================
-
-/**
- * 404 handler
- */
-app.use((req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
+app.listen(PORT, () => {
+  console.log(`🚀 GOAT BACKEND RUNNING ON PORT ${PORT}`);
 });
-
-/**
- * Global error handler
- */
-app.use((err, req, res, next) => {
-  console.error('❌ Unhandled error:', err);
-  res.status(500).json({ 
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
-
-// ============================================================================
-// START SERVER
-// ============================================================================
-
-const PORT = process.env.PORT || 5000;
-
-async function startServer() {
-  try {
-    // Initialize database
-    await initializeDatabase();
-    
-    const server = app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
-      console.log(`📦 Node environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log('✅ All systems ready');
-    });
-
-    // Handle server errors
-    server.on('error', (error) => {
-      console.error('❌ Server error:', error);
-      process.exit(1);
-    });
-
-    // Keep process alive
-    process.on('SIGTERM', () => {
-      console.log('SIGTERM received, shutting down gracefully');
-      server.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-      });
-    });
-
-    process.on('SIGINT', () => {
-      console.log('SIGINT received, shutting down gracefully');
-      server.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-      });
-    });
-
-    // Handle uncaught exceptions
-    process.on('uncaughtException', (error) => {
-      console.error('❌ Uncaught exception:', error);
-      process.exit(1);
-    });
-
-    // Handle unhandled promise rejections
-    process.on('unhandledRejection', (reason, promise) => {
-      console.error('❌ Unhandled rejection at:', promise, 'reason:', reason);
-    });
-
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
-}
-
-startServer();
