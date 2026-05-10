@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
-const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -11,24 +10,83 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Safe AI Service Loading
+let groq = null;
+try {
+  const Groq = require('groq-sdk');
+  if (process.env.GROQ_API_KEY) {
+    groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+} catch (e) {
+  console.warn('⚠️ AI Service Library Missing');
+}
+
 // GitHub API Configuration
 const TOKEN = process.env.GITHUB_TOKEN;
-const githubHeaders = TOKEN ? { 
-  'Authorization': `token ${TOKEN}`,
-  'User-Agent': 'Goat-Repo-Finder-Audit'
-} : {
-  'User-Agent': 'Goat-Repo-Finder-Audit'
+const githubHeaders = {
+  'User-Agent': 'Goat-Repo-Finder-Audit',
+  ...(TOKEN ? { 'Authorization': `token ${TOKEN}` } : {})
 };
 
 /**
- * Health Check Endpoint
+ * Health Check
  */
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'active', timestamp: new Date().toISOString() });
+  res.json({ status: 'active', node_version: process.version });
 });
 
 /**
- * Search Repositories Endpoint
+ * README Proxy with Parallel Stability
+ */
+app.get('/api/readme/:owner/:repo', async (req, res) => {
+  const { owner, repo } = req.params;
+  console.log(`[AUDIT] Starting Discovery for ${owner}/${repo}`);
+
+  try {
+    // 1. GitHub API Attempt
+    try {
+      const apiRes = await axios.get(`https://api.github.com/repos/${owner}/${repo}/readme`, {
+        headers: githubHeaders,
+        timeout: 8000
+      });
+      return res.json(apiRes.data);
+    } catch (apiError) {
+      console.warn(`[AUDIT] Layer 1 Fail: ${apiError.message}`);
+    }
+
+    // 2. Parallel Raw Fallback
+    const branches = ['main', 'master', 'develop'];
+    const extensions = ['.md', '.markdown', ''];
+    const targets = [];
+
+    branches.forEach(branch => {
+      extensions.forEach(ext => {
+        const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/README${ext}`;
+        targets.push(
+          axios.get(url, { timeout: 6000 }).then(r => ({
+            content: Buffer.from(r.data.toString()).toString('base64'),
+            encoding: 'base64',
+            branch
+          })).catch(() => null)
+        );
+      });
+    });
+
+    const results = await Promise.all(targets);
+    const validResult = results.find(r => r !== null);
+
+    if (validResult) {
+      return res.json(validResult);
+    }
+
+    throw new Error('All documentation vectors exhausted');
+  } catch (error) {
+    res.status(500).json({ error: `Discovery Failed: ${error.message}` });
+  }
+});
+
+/**
+ * Search Proxy
  */
 app.get('/api/search', async (req, res) => {
   try {
@@ -42,97 +100,35 @@ app.get('/api/search', async (req, res) => {
     
     res.json(response.data);
   } catch (error) {
-    console.error('Search error:', error.message);
     res.status(error.response?.status || 500).json({ error: error.message });
   }
 });
 
 /**
- * Fetch README with Robust Parallel Failover
- */
-app.get('/api/readme/:owner/:repo', async (req, res) => {
-  const { owner, repo } = req.params;
-  console.log(`[AUDIT START] ${owner}/${repo}`);
-
-  // Layer 1: GitHub API Attempt
-  try {
-    const apiRes = await axios.get(`https://api.github.com/repos/${owner}/${repo}/readme`, {
-      headers: githubHeaders,
-      timeout: 8000
-    });
-    console.log(`[AUDIT] Layer 1 Success`);
-    return res.json(apiRes.data);
-  } catch (apiError) {
-    console.warn(`[AUDIT] Layer 1 Fail, pivoting to Parallel Raw...`);
-    
-    // Layer 2: Parallel Raw Fetch (Highly Compatible)
-    const branches = ['main', 'master', 'develop'];
-    const extensions = ['.md', '.markdown', ''];
-    const fetchTargets = [];
-
-    branches.forEach(branch => {
-      extensions.forEach(ext => {
-        const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/README${ext}`;
-        fetchTargets.push(
-          axios.get(url, { timeout: 6000 }).then(r => ({
-            content: Buffer.from(r.data.toString()).toString('base64'),
-            encoding: 'base64',
-            source: branch
-          }))
-        );
-      });
-    });
-
-    try {
-      // Manual implementation of "any" for maximum compatibility
-      const results = await Promise.allSettled(fetchTargets);
-      const firstValid = results.find(r => r.status === 'fulfilled');
-      
-      if (firstValid) {
-        console.log(`[AUDIT] Layer 2 Success - Found on branch ${firstValid.value.source}`);
-        return res.json(firstValid.value);
-      }
-      
-      throw new Error('All documentation vectors exhausted');
-    } catch (err) {
-      console.error('[AUDIT] Layer 2 TOTAL FAIL');
-      res.status(apiError.response?.status || 500).json({ 
-        error: `Infrastructure Failure: ${apiError.message}` 
-      });
-    }
-  }
-});
-
-/**
- * AI Explanation Endpoint
+ * AI Briefing Proxy
  */
 app.post('/api/explain', async (req, res) => {
+  if (!groq) return res.status(503).json({ error: 'AI Service Offline' });
+
   try {
     const { content } = req.body;
-    if (!process.env.GROQ_API_KEY) {
-      return res.status(500).json({ error: 'AI Service Key Missing' });
-    }
-
-    const Groq = require('groq-sdk');
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-    
-    const truncatedContent = content ? content.substring(0, 10000) : "No content provided.";
+    const truncated = content ? content.substring(0, 8000) : "No context.";
     
     const completion = await groq.chat.completions.create({
       messages: [
-        { role: "system", content: "You are a ruthless technical auditor. Provide ONLY a 2-sentence tactical brief. No intros." },
-        { role: "user", content: `Analyze: ${truncatedContent}` }
+        { role: "system", content: "Ruthless Technical Auditor. 2 sentences. Fact-only. No intro." },
+        { role: "user", content: `Analyze: ${truncated}` }
       ],
       model: "llama-3.3-70b-versatile",
     });
 
     res.json({ summary: completion.choices[0].message.content });
   } catch (error) {
-    console.error('AI Error:', error.message);
-    res.status(500).json({ error: 'AI Briefing Offline' });
+    res.status(500).json({ error: 'Briefing Failed' });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 GOAT BACKEND RUNNING ON PORT ${PORT}`);
+  console.log(`🚀 GOAT DISCOVERY ENGINE ACTIVE ON PORT ${PORT}`);
+  console.log(`📡 TOKEN SECURITY: ${TOKEN ? 'AUTHENTICATED' : 'ANONYMOUS (RATE-LIMITED)'}`);
 });

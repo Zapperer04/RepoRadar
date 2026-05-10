@@ -19,6 +19,8 @@ function createAbortController(timeoutMs = DEFAULT_TIMEOUT) {
  * Generic fetch wrapper with error handling and timeout
  */
 async function apiCall(endpoint, options = {}) {
+  const targetUrl = `${API_URL}${endpoint}`;
+  console.log(`[NETWORK] Discovery Request: ${targetUrl}`);
   const { controller, timeoutId } = createAbortController(options.timeout || DEFAULT_TIMEOUT);
   
   // Add authentication header if token exists
@@ -30,7 +32,7 @@ async function apiCall(endpoint, options = {}) {
   };
 
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    const response = await fetch(targetUrl, {
       ...options,
       headers,
       signal: controller.signal
@@ -52,16 +54,18 @@ async function apiCall(endpoint, options = {}) {
       throw error;
     }
 
+    console.log(`[NETWORK] Success: ${endpoint}`);
     return data;
   } catch (error) {
     clearTimeout(timeoutId);
+    console.error(`[NETWORK] Total Bridge Collapse: ${error.message}`);
     
     if (error.name === 'AbortError') {
-      throw new Error('Request timeout. Please check your connection and try again.');
+      throw new Error('Connection Timeout: The infrastructure at Port 5000 is too slow to respond.');
     }
     
     if (error.message.includes('Failed to fetch')) {
-      throw new Error(`Cannot connect to server at ${API_URL}. Is the backend running?`);
+      throw new Error(`CRITICAL: Cannot reach the backend at ${API_URL}. Ensure 'npm run server' is active.`);
     }
     
     throw error;

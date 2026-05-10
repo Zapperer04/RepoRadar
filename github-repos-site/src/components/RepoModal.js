@@ -10,11 +10,11 @@ const RepoModal = ({ repo, onClose }) => {
   const [errorDetails, setErrorDetails] = useState(null);
   const [loadingReadme, setLoadingReadme] = useState(true);
   const [loadingAI, setLoadingAI] = useState(false);
+  const [debugStatus, setDebugStatus] = useState('INIT_AUDIT');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
-  const lastRepoRef = useRef(null);
+  const auditTriggeredRef = useRef(null);
   const watchdogRef = useRef(null);
-  const isLoadingRef = useRef(true); // Precision tracker for watchdog
 
   const decodeUniversal = (base64) => {
     try {
@@ -31,7 +31,6 @@ const RepoModal = ({ repo, onClose }) => {
 
   const handleExplain = useCallback(async (contentToUse) => {
     if (!contentToUse) return;
-
     setLoadingAI(true);
     try {
       const prompt = `Repo: ${repo.full_name}\n\nCONTENT:\n${contentToUse.substring(0, 10000)}`;
@@ -45,66 +44,56 @@ const RepoModal = ({ repo, onClose }) => {
   }, [repo.full_name]);
 
   useEffect(() => {
-    if (lastRepoRef.current === repo.full_name) return;
-    lastRepoRef.current = repo.full_name;
+    // Strict Guard: Prevent redundant fetches for the same repo
+    if (auditTriggeredRef.current === repo.full_name) return;
+    auditTriggeredRef.current = repo.full_name;
 
     let isMounted = true;
-    if (watchdogRef.current) clearTimeout(watchdogRef.current);
-
     const loadData = async () => {
-      console.log(`[AUDIT] Initiating discovery for: ${repo.full_name}`);
+      setDebugStatus('PREPARING_FETCH');
       setLoadingReadme(true);
-      isLoadingRef.current = true;
-      setReadme('');
-      setExplanation('');
       setErrorDetails(null);
 
-      // --- PRECISION WATCHDOG ---
+      // Watchdog: Terminate hang if no response in 12s
       watchdogRef.current = setTimeout(() => {
-        if (isMounted && isLoadingRef.current) {
-          console.error('[AUDIT] Connection Watchdog Triggered - No response from Port 5000');
-          setErrorDetails('Backend Unresponsive: The discovery engine could not connect to the local API server. Ensure the backend is running on Port 5000.');
+        if (isMounted && !readme) {
+          setDebugStatus('TIMEOUT_WATCHDOG_TRIGGERED');
+          setErrorDetails('The data bridge is unresponsive. Port 5000 is not returning any documentation.');
           setLoadingReadme(false);
-          isLoadingRef.current = false;
         }
-      }, 10000); // 10s hard-cap
+      }, 12000);
 
       try {
+        setDebugStatus('FETCHING_FROM_BACKEND');
         const data = await fetchReadme(repo.owner.login, repo.name);
-        if (!isMounted) return;
         
+        if (!isMounted) return;
         clearTimeout(watchdogRef.current);
-        isLoadingRef.current = false;
+        setDebugStatus('DECODING_CONTENT');
         
         const decodedContent = data.encoding === 'base64' 
           ? decodeUniversal(data.content) 
           : data.content;
           
         setReadme(decodedContent);
+        setDebugStatus('AUDIT_SUCCESS');
         handleExplain(decodedContent);
       } catch (err) {
         if (!isMounted) return;
         clearTimeout(watchdogRef.current);
-        isLoadingRef.current = false;
-        
-        const msg = err.response?.data?.error || err.message || 'Unknown network error';
-        console.error('[AUDIT] Data bridge collapse:', msg);
-        setErrorDetails(msg);
+        setDebugStatus('FETCH_ERROR_CAUGHT');
+        setErrorDetails(err.message || 'Infrastructure Failure');
       } finally {
-        if (isMounted) {
-          setLoadingReadme(false);
-          isLoadingRef.current = false;
-        }
+        if (isMounted) setLoadingReadme(false);
       }
     };
 
     loadData();
-    
     return () => { 
       isMounted = false; 
       if (watchdogRef.current) clearTimeout(watchdogRef.current);
     };
-  }, [repo, handleExplain]);
+  }, [repo.full_name, repo.owner.login, repo.name, handleExplain, readme]);
 
   return (
     <div className="modal-overlay">
@@ -131,12 +120,17 @@ const RepoModal = ({ repo, onClose }) => {
               <div className="modal-loading-container">
                 <div className="technical-loader"></div>
                 <p>CONNECTING TO GITHUB INFRASTRUCTURE...</p>
-                <span style={{ fontSize: '0.6rem', color: 'var(--text-dim)', marginTop: '1rem' }}>Verifying local API bridge (Port 5000)...</span>
+                <div className="debug-telemetry-pill">
+                  STATUS: {debugStatus} | PORT: 5000
+                </div>
               </div>
             ) : errorDetails ? (
               <div className="modal-loading-container" style={{ color: '#ff7b72' }}>
                 <p style={{ fontSize: '1.2rem', fontWeight: '900' }}>CONNECTION FAILURE</p>
-                <p style={{ letterSpacing: '0.1em', textAlign: 'center', maxWidth: '500px', lineHeight: '1.6', fontSize: '0.9rem' }}>{errorDetails.toUpperCase()}</p>
+                <p style={{ letterSpacing: '0.1em', textAlign: 'center', maxWidth: '500px', lineHeight: '1.6' }}>{errorDetails.toUpperCase()}</p>
+                <div className="debug-telemetry-pill error-pill">
+                  LAST STATUS: {debugStatus}
+                </div>
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '2.5rem' }}>
                   <button className="search-btn" onClick={() => window.location.reload()}>RETRY AUDIT</button>
                   <a href={repo.html_url} target="_blank" rel="noopener noreferrer" className="search-btn secondary-btn" style={{ textDecoration: 'none' }}>MANUAL SOURCE</a>
@@ -203,7 +197,7 @@ const RepoModal = ({ repo, onClose }) => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontSize: '0.65rem' }}>
                   <span>Confidence: High Precision</span>
-                  <span>v2.1.2</span>
+                  <span>v2.1.3</span>
                 </div>
               </div>
             </aside>
