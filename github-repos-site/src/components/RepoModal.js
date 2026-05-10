@@ -1,32 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw'; // <--- NEW IMPORT
+import rehypeRaw from 'rehype-raw';
+import { fetchReadme, getAIExplanation } from '../utils/apiClient';
 
 const RepoModal = ({ repo, onClose }) => {
   const [readme, setReadme] = useState('');
   const [loading, setLoading] = useState(true);
-  
-  // AI State
   const [summary, setSummary] = useState(null);
   const [explaining, setExplaining] = useState(false);
+  const [explanationError, setExplanationError] = useState(null);
 
   useEffect(() => {
     if (!repo) return;
-
-    const fetchReadme = async () => {
+    const loadReadme = async () => {
       setLoading(true);
       setReadme('');
       setSummary(null);
-
+      setExplanationError(null);
       try {
         const [owner, name] = repo.full_name.split('/');
-        // Connect to your backend
-        const res = await fetch(`http://localhost:5000/api/readme/${owner}/${name}`);
-        
-        if (!res.ok) throw new Error('Failed to fetch readme');
-
-        const data = await res.json();
+        const data = await fetchReadme(owner, name);
         if (data.content) {
           const decodedContent = decodeURIComponent(escape(atob(data.content)));
           setReadme(decodedContent);
@@ -34,31 +29,23 @@ const RepoModal = ({ repo, onClose }) => {
           setReadme('*No README.md found.*');
         }
       } catch (error) {
-        console.error(error);
-        setReadme(`### ⚠️ Readme Unavailable\n\nView on [GitHub](${repo.html_url}).`);
+        setReadme(`### ⚠️ Readme Unavailable\n\n[View on GitHub](${repo?.html_url || '#'}).`);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchReadme();
+    loadReadme();
   }, [repo]);
 
   const handleExplain = async () => {
     if (!readme || readme.length < 50) return;
-    
     setExplaining(true);
+    setExplanationError(null);
     try {
-      const res = await fetch('http://localhost:5000/api/explain', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: readme })
-      });
-      
-      const data = await res.json();
+      const data = await getAIExplanation(readme);
       setSummary(data.summary);
     } catch (error) {
-      setSummary("Sorry, I couldn't summarize this repo right now.");
+      setExplanationError(error.message || 'Could not generate explanation.');
     } finally {
       setExplaining(false);
     }
@@ -70,45 +57,64 @@ const RepoModal = ({ repo, onClose }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <a href={repo.html_url} target="_blank" rel="noopener noreferrer" className="modal-title">
+          <div className="modal-header-info">
+            <div className="feature-badge">Technical Deep Dive</div>
+            <a href={repo.html_url} target="_blank" rel="noopener noreferrer" className="modal-title" style={{ fontSize: '1.75rem' }}>
               {repo.full_name} ↗
             </a>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              {repo.language} • {repo.stargazers_count.toLocaleString()} stars
-            </span>
           </div>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
         
-        {/* AI Toolbar */}
-        <div className="ai-toolbar">
+        <div className="ai-toolbar" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--accent-primary)', padding: '1.5rem', borderRadius: 'var(--radius-md)', marginBottom: '2rem' }}>
           {!summary && !explaining && (
-            <button className="explain-btn" onClick={handleExplain}>
-              ✨ Explain like I'm 5
-            </button>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                Don't have time to read the whole documentation?
+              </p>
+              <button className="search-btn" onClick={handleExplain} style={{ background: 'var(--accent-primary)', color: 'white' }}>
+                🤖 Run Architectural Review
+              </button>
+            </div>
           )}
           
-          {explaining && <div className="ai-loading">🤖 AI is reading the code...</div>}
+          {explaining && (
+            <div style={{ textAlign: 'center', padding: '1rem' }}>
+              <div className="loading-indicator">Senior Auditor is analyzing the tech stack...</div>
+            </div>
+          )}
           
           {summary && (
-            <div className="ai-summary-box">
-              <strong>🤖 AI Summary:</strong>
-              <p>{summary}</p>
+            <div className="ai-summary-box" style={{ border: 'none', padding: '0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <span style={{ fontSize: '1.25rem' }}>🎯</span>
+                <strong style={{ color: 'var(--accent-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Senior Architect's Brief</strong>
+              </div>
+              <p style={{ fontSize: '1.1rem', lineHeight: '1.6', color: 'var(--text-primary)', fontStyle: 'italic' }}>"{summary}"</p>
+              <button 
+                className="nav-link"
+                style={{ marginTop: '1rem', padding: '0', fontSize: '0.8rem' }}
+                onClick={() => setSummary(null)}
+              >
+                ↻ Refresh Analysis
+              </button>
+            </div>
+          )}
+
+          {explanationError && (
+            <div className="ai-error-box">
+              <strong>⚠️ Audit Failed:</strong> {explanationError}
+              <button className="explain-btn" onClick={handleExplain}>Retry Audit</button>
             </div>
           )}
         </div>
 
         <div className="modal-body">
           {loading ? (
-            <div className="loading-spinner">Fetching documentation...</div>
+            <div className="loading-spinner">Decrypting repository artifacts...</div>
           ) : (
             <div className="markdown-body">
-              {/* 👇 THE FIX IS HERE: rehypePlugins={[rehypeRaw]} */}
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm]} 
-                rehypePlugins={[rehypeRaw]}
-              >
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
                 {readme}
               </ReactMarkdown>
             </div>
@@ -117,6 +123,11 @@ const RepoModal = ({ repo, onClose }) => {
       </div>
     </div>
   );
+};
+
+RepoModal.propTypes = {
+  repo: PropTypes.object,
+  onClose: PropTypes.func.isRequired
 };
 
 export default RepoModal;

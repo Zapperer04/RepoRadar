@@ -5,11 +5,11 @@ const Header = () => {
   return (
     <header className="site-header">
       <div className="brand-group">
-        <h1>
+        <h1 className="site-logo">
           <span role="img" aria-label="goat">🐐</span> 
           GOAT_FINDER
         </h1>
-        <p>Index of Underrated Repositories</p>
+        <span className="site-tagline">Index of Underrated Repositories</span>
       </div>
       
       <Navbar />

@@ -2,52 +2,62 @@ import React from 'react';
 import RepoList from './RepoList';
 
 const HiddenGems = () => {
-  
-
   const gems = [
     {
-      title: "🛠️ Underrated CLI Tools",
-      description: "Powerful terminal utilities that automate your workflow.",
-      query: "q=topic:cli+topic:terminal+stars:100..5000+pushed:>2024-01-01&sort=stars&order=desc"
+      id: 'cli-tools',
+      icon: '⌨️',
+      title: "Underrated CLI Utilities",
+      description: "Terminal tools with 200-2k stars. Active, useful, and unknown to the masses.",
+      query: "q=topic:cli+stars:200..2000+pushed:>2024-06-01&sort=updated"
     },
     {
-      title: "🧠 Knowledge Vaults",
-      description: "Cheatsheets, roadmaps, and deep-dive guides hidden in plain sight.",
-      query: "q=topic:cheatsheet+topic:guide+stars:200..4000&sort=stars&order=desc"
+      id: 'tiny-libs',
+      icon: '📦',
+      title: "Micro-Libraries",
+      description: "Zero-dependency libraries that solve one problem perfectly. Lightweight & fast.",
+      query: "q=topic:library+size:<500+stars:100..3000&sort=stars"
     },
     {
-      title: "🚀 Production Starters",
-      description: "Complete boilerplates to launch SaaS/Apps instantly. Skip the setup.",
-      query: "q=topic:boilerplate+topic:starter+stars:100..3000+pushed:>2024-01-01&sort=updated&order=desc"
+      id: 'knowledge-deep',
+      icon: '📚',
+      title: "Deep Learning Resources",
+      description: "Not just tutorials—deep technical specifications and roadmap repositories.",
+      query: "q=topic:roadmap+topic:internals+stars:500..5000&sort=stars"
     },
     {
-      title: "💎 'Awesome' Collections",
-      description: "Curated lists of resources for specific niche technologies.",
-      query: "q=topic:awesome-list+stars:500..5000&sort=stars&order=desc"
+      id: 'new-starters',
+      icon: '🌱',
+      title: "Modern SaaS Boilerplates",
+      description: "Next.js 15, Hono, Bun, and Biome starters for your next big idea.",
+      query: "q=topic:boilerplate+topic:nextjs+pushed:>2025-01-01&sort=updated"
     }
   ];
 
   return (
-    <div className="page-container">
-      <div className="gems-header">
-        <h1 className="section-title" style={{ fontSize: '2rem', border: 'none', textAlign: 'center' }}>
-          💎 Hidden Gems
-        </h1>
-        <p style={{ textAlign: 'center', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto 3rem' }}>
-          Digging deep into GitHub. These repositories have high utility, active maintainers, 
-          but haven't hit mainstream fame yet.
+    <div className="gems-page">
+      <header className="page-header">
+        <div className="feature-badge">Alpha Discovery</div>
+        <h1 className="page-title">💎 Hidden Gems</h1>
+        <p className="page-subtitle">
+          The "Greatest of All Time" isn't always the most popular. These projects represent 
+          top-tier engineering without the mainstream hype.
         </p>
-      </div>
+      </header>
 
-      {gems.map((section, index) => (
-        <div key={index} className="gem-section">
-          <div className="gem-description">
-            <h3 style={{ color: 'var(--accent-primary)', marginBottom: '0.5rem' }}>{section.title}</h3>
-            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{section.description}</p>
+      <div className="offering-grid">
+        {gems.map((section) => (
+          <div key={section.id} className="offering-section" style={{ borderLeft: '2px solid var(--border-color)', paddingLeft: '2rem' }}>
+            <header className="offering-header">
+              <div className="offering-title" style={{ fontSize: '1.5rem' }}>
+                <span>{section.icon}</span>
+                {section.title}
+              </div>
+              <p className="offering-subtitle">{section.description}</p>
+            </header>
+            <RepoList query={section.query} title="" />
           </div>
-          <RepoList query={section.query} title="" />
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };
