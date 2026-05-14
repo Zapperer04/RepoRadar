@@ -1,5 +1,5 @@
 {
-  "name": "github-repos-site",
+  "name": "reporadar",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -33,7 +33,8 @@
     "dev": "npm start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "validate:phase1": "node scripts/validate-phase1.js"
   },
   "eslintConfig": {
     "extends": [

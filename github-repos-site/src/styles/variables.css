@@ -1,0 +1,68 @@
+/**
+ * Core Design Tokens for RepoRadar
+ * Clean, Consistent Dark Developer Intelligence Dashboard Theme
+ */
+
+:root {
+  /* Exact User-Requested Colors */
+  --bg-primary: #070A12;
+  --bg-secondary: #0D111C;
+  --bg-elevated: #111827;
+  --bg-soft: #151B2B;
+  --border-subtle: #1F2937;
+  --border-strong: #334155;
+  --text-primary: #F9FAFB;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  --accent-primary: #38BDF8;
+  --accent-secondary: #8B5CF6;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+
+  /* Backward Compatibility Aliases for components not yet fully normalized */
+  --bg-deep: var(--bg-primary);
+  --bg-slate: var(--bg-secondary);
+  --bg-panel: var(--bg-elevated);
+  --bg-surface: var(--bg-secondary);
+  --bg-card: var(--bg-elevated);
+  --border-color: var(--border-subtle);
+  --border-bright: var(--border-strong);
+  --accent-azure: var(--accent-primary);
+  --accent-indigo: var(--accent-secondary);
+  --status-success: var(--success);
+  --status-warning: var(--warning);
+  --status-danger: var(--danger);
+  --text-white: var(--text-primary);
+  --text-dim: var(--text-secondary);
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
+  --space-9: 64px;
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', Courier, monospace;
+
+  /* Shadows */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.5);
+  
+  /* Layout */
+  --header-height: 72px;
+  --sidebar-width: 280px;
+}

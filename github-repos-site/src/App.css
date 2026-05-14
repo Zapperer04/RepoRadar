@@ -1,62 +1,7 @@
 /* 
-  GOAT REPO FINDER - STATE-OF-THE-ART TECHNICAL TERMINAL
-  Theme: Deep Slate & Cyber-Azure
+  GOAT REPO FINDER - COMPATIBILITY STYLES
+  Minimal component rules kept to prevent layout breaking of un-normalized views.
 */
-
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&family=JetBrains+Mono:wght@400;700&display=swap');
-
-:root {
-  /* Cinematic Palette */
-  --bg-deep: #020617;
-  --bg-slate: #0f172a;
-  --bg-panel: rgba(15, 23, 42, 0.7);
-  
-  --accent-azure: #38bdf8;
-  --accent-indigo: #818cf8;
-  --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-  --accent-glow: rgba(56, 189, 248, 0.25);
-  
-  --text-white: #f8fafc;
-  --text-dim: #94a3b8;
-  --text-muted: #475569;
-  
-  --border-subtle: rgba(148, 163, 184, 0.1);
-  --border-bright: rgba(56, 189, 248, 0.4);
-  
-  /* Geometry */
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --header-height: 80px;
-  
-  /* Stacking */
-  --z-nav: 1000;
-  --z-modal: 5000;
-}
-
-/* 1. Reset & Global Polish */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Outfit', sans-serif;
-  background-color: var(--bg-deep);
-  color: var(--text-white);
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-
-/* Luxury Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-deep); }
-::-webkit-scrollbar-thumb { 
-  background: var(--text-muted); 
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover { background: var(--accent-azure); }
 
 /* 2. Global Header & Navigation */
 .site-header {
