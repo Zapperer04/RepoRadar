@@ -1,58 +1,88 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, useLocation } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
+import DashboardLayout from '../layouts/DashboardLayout.jsx';
+import RepoGrid from '../components/repo/RepoGrid.jsx';
+import RepoFilters from '../components/repo/RepoFilters.jsx';
+import RepoSortBar from '../components/repo/RepoSortBar.jsx';
 import RepoSearchBar from '../components/repo/RepoSearchBar.jsx';
-import RepoList from '../components/repo/RepoList.jsx';
-import MainLayout from '../layouts/MainLayout.jsx';
-import EmptyState from '../components/ui/EmptyState.jsx';
+import { mockRepos } from '../data/mockRepos.js';
 
 const Explore = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const location = useLocation();
-  const [query, setQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState({
+    domain: '',
+    language: '',
+    stars: '',
+    activityLevel: '',
+    repoType: '',
+    isHiddenGem: false,
+    isBeginnerFriendly: false
+  });
+  const [sort, setSort] = useState('hiddenGemScore');
 
-  const searchString = location.search;
+  const filteredAndSortedRepos = useMemo(() => {
+    return mockRepos.filter(repo => {
+      // Search
+      if (searchQuery && !repo.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
+          !repo.description.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          !repo.topics.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))) {
+        return false;
+      }
+      
+      // Filters
+      if (filters.domain && repo.domain !== filters.domain) return false;
+      if (filters.language && repo.language !== filters.language) return false;
+      if (filters.activityLevel && repo.activityLevel !== filters.activityLevel) return false;
+      if (filters.repoType && repo.repoType !== filters.repoType) return false;
+      if (filters.isHiddenGem && !repo.isHiddenGem) return false;
+      if (filters.isBeginnerFriendly && !repo.isBeginnerFriendly) return false;
+      
+      // Star Ranges
+      if (filters.stars) {
+        const starIdx = parseInt(filters.stars, 10);
+        if (starIdx === 1 && repo.stars > 1000) return false; // Under 1k
+        if (starIdx === 2 && (repo.stars <= 1000 || repo.stars > 5000)) return false; // 1k - 5k
+        if (starIdx === 3 && repo.stars <= 5000) return false; // 5k+
+      }
 
-  useEffect(() => {
-    if (searchString) {
-      setQuery(searchString.substring(1));
-    } else {
-      setQuery('');
-    }
-  }, [searchString]);
+      return true;
+    }).sort((a, b) => {
+      if (sort === 'lastUpdated') {
+        return new Date(b.lastUpdated) - new Date(a.lastUpdated);
+      }
+      return (b[sort] || 0) - (a[sort] || 0);
+    });
+  }, [searchQuery, filters, sort]);
 
-  const handleSearch = (newQuery) => {
-    const params = new URLSearchParams(newQuery);
-    setSearchParams(params);
-  };
-
-  const urlQuery = searchParams.get('q');
+  const SidebarContent = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+      <div>
+        <h3 style={{ fontSize: '1.1rem', marginBottom: 'var(--space-4)', color: 'var(--text-primary)' }}>Filters</h3>
+        <RepoFilters filters={filters} onFilterChange={setFilters} />
+      </div>
+    </div>
+  );
 
   return (
-    <MainLayout>
+    <DashboardLayout sidebar={SidebarContent}>
       <div className="page-container">
-        <header className="page-header">
-          <h1 className="page-title">⚡ Command Center</h1>
-          <p className="page-subtitle">Precision discovery engine. Query the GitHub index with developer-centric filters.</p>
+        <header className="page-header" style={{ marginBottom: 'var(--space-4)' }}>
+          <h1 className="page-title">Explore Intelligence</h1>
+          <p className="page-subtitle">
+            Filter, sort, and discover open-source projects using deep repository analytics.
+          </p>
         </header>
 
-        <RepoSearchBar onSearch={handleSearch} />
-
-        <div className="section" style={{ minHeight: '400px', marginTop: 'var(--space-6)' }}>
-          {query ? (
-            <RepoList
-              query={query}
-              title={urlQuery && urlQuery.startsWith('topic:') ? `Domain: ${urlQuery.replace('topic:', '')}` : "Audited Results"}
-            />
-          ) : (
-            <EmptyState 
-              icon="🛰️"
-              title="Awaiting coordinates"
-              message="Enter a query or select a domain in the Explorer."
-            />
-          )}
-        </div>
+        <RepoSearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        
+        <RepoSortBar 
+          sort={sort} 
+          onSortChange={setSort} 
+          resultCount={filteredAndSortedRepos.length} 
+        />
+        
+        <RepoGrid repos={filteredAndSortedRepos} />
       </div>
-    </MainLayout>
+    </DashboardLayout>
   );
 };
 

@@ -11,6 +11,7 @@ import Domains from '../pages/Domains.jsx';
 import SaveToCollectionModal from '../components/saved/SaveToCollectionModal.jsx';
 import Login from '../pages/Login.jsx';
 import Signup from '../pages/Signup.jsx';
+import RepoDetails from '../pages/RepoDetails.jsx';
 
 // Pages - Protected
 import Profile from '../pages/Profile.jsx';
@@ -41,6 +42,9 @@ const AppRoutes = () => {
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/collections" element={<ProtectedRoute><Collections /></ProtectedRoute>} />
       <Route path="/saved" element={<ProtectedRoute><SavedRepos /></ProtectedRoute>} />
+      
+      {/* Repo Details */}
+      <Route path="/repo/:owner/:repoName" element={<RepoDetails />} />
     </Routes>
   );
 };

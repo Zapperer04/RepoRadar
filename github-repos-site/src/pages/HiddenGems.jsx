@@ -1,88 +1,63 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import RepoCard from '../components/repo/RepoCard.jsx';
-import { getHiddenGems } from '../services/apiClient';
+import React from 'react';
 import MainLayout from '../layouts/MainLayout.jsx';
-import Input from '../components/ui/Input.jsx';
-import Skeleton from '../components/ui/Skeleton.jsx';
-import EmptyState from '../components/ui/EmptyState.jsx';
+import RepoGrid from '../components/repo/RepoGrid.jsx';
+import Card from '../components/ui/Card.jsx';
+import { mockRepos } from '../data/mockRepos.js';
 
 const HiddenGems = () => {
-  const [repos, setRepos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [language, setLanguage] = useState('');
-  const [error, setError] = useState(null);
-
-  const fetchGems = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getHiddenGems(language);
-      setRepos(data.items || []);
-    } catch (err) {
-      setError(err.message || 'Failed to uncover gems.');
-    } finally {
-      setLoading(false);
-    }
-  }, [language]);
-
-  useEffect(() => {
-    fetchGems();
-  }, [fetchGems]);
+  const hiddenGems = mockRepos.filter(repo => repo.isHiddenGem).sort((a, b) => b.hiddenGemScore - a.hiddenGemScore);
+  const todaysPicks = hiddenGems.slice(0, 3);
+  const risingThisWeek = hiddenGems.slice(3, 6);
+  const lowStarHighQuality = hiddenGems.filter(r => r.stars < 500).slice(0, 3);
 
   return (
     <MainLayout>
       <div className="page-container">
-        <header className="page-header" style={{ alignItems: 'center', textAlign: 'center', marginBottom: 'var(--space-6)' }}>
+        <header className="page-header" style={{ marginBottom: 'var(--space-6)' }}>
           <h1 className="page-title">💎 Hidden Gems</h1>
-          <p className="page-subtitle" style={{ maxWidth: '600px' }}>
-            High-quality projects with low visibility. Filtered by recent activity and quality signals.
+          <p className="page-subtitle">
+            Curated, high-quality repositories under 1,000 stars with exceptional documentation and growth signals.
           </p>
-          
-          <div style={{ marginTop: 'var(--space-4)', width: '100%', maxWidth: '300px' }}>
-            <select 
-              className="rr-select" 
-              value={language} 
-              onChange={(e) => setLanguage(e.target.value)}
-            >
-              <option value="">All Languages</option>
-              <option value="javascript">JavaScript</option>
-              <option value="typescript">TypeScript</option>
-              <option value="python">Python</option>
-              <option value="rust">Rust</option>
-              <option value="go">Go</option>
-            </select>
-          </div>
         </header>
 
-        {error && <div className="rr-error-state" style={{ marginBottom: 'var(--space-4)' }}>⚠️ {error}</div>}
+        <section className="grid-3" style={{ marginBottom: 'var(--space-8)' }}>
+          <Card style={{ textAlign: 'center', backgroundColor: 'rgba(56, 189, 248, 0.05)', borderColor: 'var(--accent-primary)' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-primary)' }}>{hiddenGems.length}</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Gems Tracked</div>
+          </Card>
+          <Card style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--success)' }}>+3</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Added Today</div>
+          </Card>
+          <Card style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--warning)' }}>92/100</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Avg Gem Score</div>
+          </Card>
+        </section>
 
-        <div className="grid-3" style={{ marginTop: 'var(--space-6)' }}>
-          {loading ? (
-            Array(6).fill(0).map((_, i) => (
-              <div key={i} className="rr-card">
-                <Skeleton style={{ height: '24px', width: '70%', marginBottom: 'var(--space-3)' }} />
-                <Skeleton style={{ height: '16px', width: '100%', marginBottom: 'var(--space-2)' }} />
-                <Skeleton style={{ height: '16px', width: '80%', marginBottom: 'var(--space-4)' }} />
-                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                  <Skeleton style={{ height: '20px', width: '60px', borderRadius: 'var(--radius-full)' }} />
-                  <Skeleton style={{ height: '20px', width: '60px', borderRadius: 'var(--radius-full)' }} />
-                </div>
-              </div>
-            ))
-          ) : repos.length > 0 ? (
-            repos.map(repo => (
-              <RepoCard key={repo.id} repo={repo} />
-            ))
-          ) : (
-            <div style={{ gridColumn: '1 / -1' }}>
-              <EmptyState 
-                icon="🕳️"
-                title="No gems uncovered"
-                message="We couldn't find any untouched repositories matching this filter."
-              />
-            </div>
-          )}
-        </div>
+        <section className="section">
+          <header className="section-header">
+            <h2 className="section-title">Today's Hidden Gems</h2>
+          </header>
+          <RepoGrid repos={todaysPicks} />
+        </section>
+
+        <section className="section">
+          <header className="section-header">
+            <h2 className="section-title">Rising This Week</h2>
+          </header>
+          <RepoGrid repos={risingThisWeek} />
+        </section>
+        
+        {lowStarHighQuality.length > 0 && (
+          <section className="section">
+            <header className="section-header">
+              <h2 className="section-title">Ultra-Low Stars, High Quality</h2>
+              <p className="section-subtitle">Under 500 stars</p>
+            </header>
+            <RepoGrid repos={lowStarHighQuality} />
+          </section>
+        )}
       </div>
     </MainLayout>
   );
