@@ -76,6 +76,24 @@ const RepoFilters = ({ filters, onFilterChange }) => {
           Beginner Friendly Only
         </label>
       </div>
+
+      <div style={{ marginTop: 'var(--space-2)' }}>
+        <button 
+          className="rr-btn rr-btn-secondary" 
+          style={{ width: '100%' }}
+          onClick={() => onFilterChange({
+            domain: '',
+            language: '',
+            stars: '',
+            activityLevel: '',
+            repoType: '',
+            isHiddenGem: false,
+            isBeginnerFriendly: false
+          })}
+        >
+          Reset Filters
+        </button>
+      </div>
     </div>
   );
 };

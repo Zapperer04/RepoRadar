@@ -5,12 +5,25 @@ import Card, { CardHeader, CardTitle, CardDescription } from '../components/ui/C
 import Badge from '../components/ui/Badge.jsx';
 import Button from '../components/ui/Button.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
-import { mockRepos } from '../data/mockRepos.js';
+import Loader from '../components/ui/Loader.jsx';
+import { useRepoData } from '../hooks/useRepoData.js';
+import { repoService } from '../services/repoService.js';
 
 const RepoDetails = () => {
   const { owner, repoName } = useParams();
   
-  const repo = mockRepos.find(r => r.owner === owner && r.name === repoName);
+  const { data: repo, loading, source } = useRepoData(() => repoService.getRepoDetails(owner, repoName), [owner, repoName]);
+  const { data: similarRepos } = useRepoData(() => repoService.getSimilarRepos(owner, repoName), [owner, repoName]);
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="page-container" style={{ display: 'flex', justifyContent: 'center', paddingTop: 'var(--space-8)' }}>
+          <Loader />
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!repo) {
     return (
@@ -31,24 +44,32 @@ const RepoDetails = () => {
           </Link>
         </div>
 
-        <header className="page-header" style={{ marginBottom: 'var(--space-6)', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <h1 className="page-title" style={{ fontSize: '2.5rem', marginBottom: '8px' }}>
+        <header className="page-header" style={{ marginBottom: 'var(--space-6)', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+          <div style={{ flex: '1 1 300px' }}>
+            <h1 className="page-title" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', marginBottom: '8px', wordBreak: 'break-word' }}>
               <span style={{ color: 'var(--text-secondary)' }}>{repo.owner} /</span> {repo.name}
             </h1>
             <p className="page-subtitle" style={{ fontSize: '1.2rem', maxWidth: '800px', marginBottom: '16px' }}>
               {repo.description}
+              {source && <Badge variant={source === 'github' ? 'success' : 'muted'} style={{ marginLeft: '8px', verticalAlign: 'middle' }}>Source: {source}</Badge>}
             </p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <Badge variant="muted">{repo.domain}</Badge>
-              <Badge variant="muted">{repo.language}</Badge>
+              <Badge variant="muted">{repo.domain || 'Unknown'}</Badge>
+              <Badge variant="muted">{repo.language || 'Unknown'}</Badge>
               {repo.isHiddenGem && <Badge variant="accent">Hidden Gem</Badge>}
               {repo.isTrending && <Badge variant="warning">Trending</Badge>}
               {repo.isBeginnerFriendly && <Badge variant="success">Beginner Friendly</Badge>}
             </div>
           </div>
-          <div>
-            <Button variant="primary" size="lg">Save to Stash</Button>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            {repo.githubUrl && (
+              <a href={repo.githubUrl} target="_blank" rel="noopener noreferrer">
+                <Button variant="secondary" size="lg">Open GitHub</Button>
+              </a>
+            )}
+            <Button variant={repo.isSaved ? 'secondary' : 'primary'} size="lg">
+              {repo.isSaved ? 'Saved' : 'Save to Stash'}
+            </Button>
           </div>
         </header>
 
@@ -83,8 +104,9 @@ const RepoDetails = () => {
             <Card>
               <CardHeader><CardTitle>Activity Insights</CardTitle></CardHeader>
               <CardDescription>
-                Activity level is <strong>{repo.activityLevel}</strong>. Last updated on {new Date(repo.lastUpdated).toLocaleDateString()}.
-                It currently has {repo.openIssues} open issues and {repo.forks} forks.
+                Activity level is <strong>{repo.activityLevel || 'Unknown'}</strong>. 
+                {repo.lastUpdated && ` Last updated on ${new Date(repo.lastUpdated).toLocaleDateString()}.`}
+                It currently has {repo.openIssues || 0} open issues and {repo.forks || 0} forks.
               </CardDescription>
             </Card>
           </div>
@@ -101,10 +123,19 @@ const RepoDetails = () => {
             <Card>
               <CardHeader><CardTitle>Similar Repositories</CardTitle></CardHeader>
               <CardDescription>
-                <ul>
-                  <li style={{ marginBottom: '8px' }}>Example related repo 1</li>
-                  <li style={{ marginBottom: '8px' }}>Example related repo 2</li>
-                </ul>
+                {similarRepos && similarRepos.length > 0 ? (
+                  <ul style={{ paddingLeft: '20px' }}>
+                    {similarRepos.map(sim => (
+                      <li key={sim.id} style={{ marginBottom: '8px' }}>
+                        <Link to={`/repo/${sim.owner}/${sim.name}`} style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>
+                          {sim.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No similar repositories found.</p>
+                )}
               </CardDescription>
             </Card>
           </div>

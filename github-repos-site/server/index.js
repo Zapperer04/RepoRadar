@@ -38,13 +38,17 @@ const collectionRoutes = require('./routes/collections');
 const userRoutes = require('./routes/user');
 
 console.log('[ROUTES] Registering routes...');
-app.use('/api', repoRoutes);
 app.use('/api/repos', repoRoutes);
-app.use('/api/search', searchRoutes);
-app.use('/api/hiddenGems', hiddenGemsRoutes);
-app.use('/api/trending', trendingRoutes);
-app.use('/api/domains', domainsRoutes);
-app.use('/api/compare', compareRoutes);
+
+// Backward compatible aliases mapping to new repo controller
+const repoController = require('./controllers/repo.controller');
+app.get('/api/search', repoController.searchRepos);
+app.get('/api/hiddenGems', repoController.getHiddenGems);
+app.get('/api/trending', repoController.getTrending);
+app.get('/api/domains', repoController.getDomains);
+
+// Existing routes (commented out or kept if they actually exist and aren't superseded)
+// app.use('/api/compare', compareRoutes);
 app.use('/api/saved', savedRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/auth', authRoutes);

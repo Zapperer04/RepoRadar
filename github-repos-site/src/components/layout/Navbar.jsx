@@ -24,14 +24,14 @@ const Navbar = () => {
       top: 0,
       zIndex: 100
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-6)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-6)', overflowX: 'auto', whiteSpace: 'nowrap', paddingRight: 'var(--space-4)' }}>
         <Link to="/" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
           <span role="img" aria-label="radar">🛰️</span> 
-          RepoRadar
+          <span className="hide-on-mobile">RepoRadar</span>
         </Link>
         
-        <div style={{ display: 'flex', gap: 'var(--space-4)', alignItems: 'center' }}>
-          <NavLink to="/" className={({ isActive }) => isActive ? "rr-btn rr-btn-ghost" : "rr-btn rr-btn-ghost"} end style={({ isActive }) => ({ color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)' })}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+          <NavLink to="/" className="rr-btn rr-btn-ghost" end style={({ isActive }) => ({ color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)' })}>
             Home
           </NavLink>
           <NavLink to="/explore" className="rr-btn rr-btn-ghost" style={({ isActive }) => ({ color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)' })}>

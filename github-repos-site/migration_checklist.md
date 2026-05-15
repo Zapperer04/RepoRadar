@@ -52,3 +52,16 @@
   - `SavedRepos.jsx`, `Collections.jsx` cleanly mapped to user data schemas.
   - `RepoDetails.jsx` placeholder created for direct repository intelligence viewing.
 - [x] **Rule Verification**: Zero backend logic or DB scoring implemented. Strictly UI.
+
+## Phase 3.5 Visual QA & Polish
+- [x] **Component Polish**: `RepoCard` strictly aligned with clamped text, flex-bottom buttons, and stable dimensions. Empty states centered in `RepoGrid`.
+- [x] **Responsive Scaling**: Mobile fluid typography applied to `Home` hero text. `Navbar` horizontally bounds links to prevent overflow.
+- [x] **Interaction Hardening**: `Explore` page search deeply parses multiple mock data fields case-insensitively. Added "Reset Filters" and URL query parsing for Domain CTA linking.
+- [x] **Defensive Rendering**: `RepoDetails` gracefully handles missing object fields. Sections on `HiddenGems` hide if data arrays are empty.
+
+## Phase 4 Backend API Contract & GitHub Service
+- [x] **Contract Definition**: Established identical shape for `normalizeGitHubRepo` to match legacy mock data.
+- [x] **GitHub Service**: Built robust `github.service.js` querying `/search/repositories`.
+- [x] **Scoring Functions**: Created simple, deterministic formulas for Hidden Gem, Growth, Docs, and Maintenance.
+- [x] **Fallback Engine**: Implemented `fallbackRepos.js` backend safety net preventing HTTP 500s during rate limits.
+- [x] **Frontend Hook**: Wired `Home`, `Explore`, `HiddenGems`, `Trending`, `Domains`, and `RepoDetails` to use `useRepoData` and `repoService.js` with `source` indicators.

@@ -4,17 +4,22 @@ import MainLayout from '../layouts/MainLayout.jsx';
 import Card, { CardHeader, CardTitle, CardDescription } from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
 import RepoGrid from '../components/repo/RepoGrid.jsx';
-import { mockRepos } from '../data/mockRepos.js';
+import Loader from '../components/ui/Loader.jsx';
+import Badge from '../components/ui/Badge.jsx';
+import { useRepoData } from '../hooks/useRepoData.js';
+import { repoService } from '../services/repoService.js';
 
 const Home = () => {
-  const featuredGems = mockRepos.filter(r => r.isHiddenGem).slice(0, 3);
+  const { data: featuredGems, source, loading } = useRepoData(repoService.getHiddenGems);
+
+  const displayGems = featuredGems ? featuredGems.slice(0, 3) : [];
 
   return (
     <MainLayout>
       <div className="page-container">
         {/* 1. Hero */}
         <section style={{ textAlign: 'center', padding: 'var(--space-8) 0', marginBottom: 'var(--space-6)' }}>
-          <h1 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: 'var(--space-4)', background: 'linear-gradient(to right, var(--text-primary), var(--text-secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 900, marginBottom: 'var(--space-4)', background: 'linear-gradient(to right, var(--text-primary), var(--text-secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1.2 }}>
             Discover underrated open-source repositories before they blow up.
           </h1>
           <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', maxWidth: '800px', margin: '0 auto var(--space-6)' }}>
@@ -80,11 +85,14 @@ const Home = () => {
           <header className="section-header">
             <div>
               <h2 className="section-title">Featured Hidden Gems</h2>
-              <p className="section-subtitle">Top curated picks of the day</p>
+              <p className="section-subtitle">
+                Top curated picks of the day
+                {source && <Badge variant={source === 'github' ? 'success' : 'muted'} style={{ marginLeft: '8px' }}>Source: {source}</Badge>}
+              </p>
             </div>
             <Link to="/hidden-gems"><Button variant="ghost">View All →</Button></Link>
           </header>
-          <RepoGrid repos={featuredGems} />
+          {loading ? <div style={{ display: 'flex', justifyContent: 'center' }}><Loader /></div> : <RepoGrid repos={displayGems} />}
         </section>
 
         {/* 5. Ranking Explainer */}

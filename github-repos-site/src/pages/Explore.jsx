@@ -1,15 +1,25 @@
 import React, { useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout.jsx';
 import RepoGrid from '../components/repo/RepoGrid.jsx';
 import RepoFilters from '../components/repo/RepoFilters.jsx';
 import RepoSortBar from '../components/repo/RepoSortBar.jsx';
 import RepoSearchBar from '../components/repo/RepoSearchBar.jsx';
-import { mockRepos } from '../data/mockRepos.js';
+import Loader from '../components/ui/Loader.jsx';
+import Badge from '../components/ui/Badge.jsx';
+import { useRepoData } from '../hooks/useRepoData.js';
+import { repoService } from '../services/repoService.js';
 
 const Explore = () => {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialDomain = searchParams.get('domain') || '';
+
+  const { data: serverRepos, source, loading } = useRepoData(repoService.getRepos);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
-    domain: '',
+    domain: initialDomain,
     language: '',
     stars: '',
     activityLevel: '',
@@ -20,12 +30,21 @@ const Explore = () => {
   const [sort, setSort] = useState('hiddenGemScore');
 
   const filteredAndSortedRepos = useMemo(() => {
-    return mockRepos.filter(repo => {
+    const baseRepos = serverRepos || [];
+    return baseRepos.filter(repo => {
       // Search
-      if (searchQuery && !repo.name.toLowerCase().includes(searchQuery.toLowerCase()) && 
-          !repo.description.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          !repo.topics.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))) {
-        return false;
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesName = repo.name && repo.name.toLowerCase().includes(query);
+        const matchesOwner = repo.owner && repo.owner.toLowerCase().includes(query);
+        const matchesDesc = repo.description && repo.description.toLowerCase().includes(query);
+        const matchesDomain = repo.domain && repo.domain.toLowerCase().includes(query);
+        const matchesLang = repo.language && repo.language.toLowerCase().includes(query);
+        const matchesTopics = repo.topics && repo.topics.some(t => t.toLowerCase().includes(query));
+        
+        if (!matchesName && !matchesOwner && !matchesDesc && !matchesDomain && !matchesLang && !matchesTopics) {
+          return false;
+        }
       }
       
       // Filters
@@ -66,10 +85,13 @@ const Explore = () => {
     <DashboardLayout sidebar={SidebarContent}>
       <div className="page-container">
         <header className="page-header" style={{ marginBottom: 'var(--space-4)' }}>
-          <h1 className="page-title">Explore Intelligence</h1>
-          <p className="page-subtitle">
-            Filter, sort, and discover open-source projects using deep repository analytics.
-          </p>
+          <div>
+            <h1 className="page-title">Explore Intelligence</h1>
+            <p className="page-subtitle">
+              Filter, sort, and discover open-source projects using deep repository analytics.
+              {source && <Badge variant={source === 'github' ? 'success' : 'muted'} style={{ marginLeft: '8px' }}>Source: {source}</Badge>}
+            </p>
+          </div>
         </header>
 
         <RepoSearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
@@ -80,7 +102,7 @@ const Explore = () => {
           resultCount={filteredAndSortedRepos.length} 
         />
         
-        <RepoGrid repos={filteredAndSortedRepos} />
+        {loading ? <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-8)' }}><Loader /></div> : <RepoGrid repos={filteredAndSortedRepos} />}
       </div>
     </DashboardLayout>
   );

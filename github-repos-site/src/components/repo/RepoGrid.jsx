@@ -5,11 +5,13 @@ import EmptyState from '../ui/EmptyState.jsx';
 const RepoGrid = ({ repos }) => {
   if (!repos || repos.length === 0) {
     return (
-      <EmptyState 
-        icon="🔍" 
-        title="No repositories found" 
-        message="Try adjusting your search or filters to find what you're looking for." 
-      />
+      <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-8) 0' }}>
+        <EmptyState 
+          icon="🔍" 
+          title="No repositories found" 
+          message="Try adjusting your search or filters to find what you're looking for." 
+        />
+      </div>
     );
   }
 
