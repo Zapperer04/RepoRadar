@@ -71,7 +71,14 @@
 - [x] **Validation Suite**: Created `scripts/validate-api.js` and integrated into `package.json`.
 - [x] **Frontend Transparency**: Source badges verified across all dynamic pages.
 
-## Phase 5 (Pending)
-- [ ] **Saved Repos & Persistence**
-- [ ] **User Collections**
-- [ ] **AI Summaries**
+## Phase 5: Saved Repositories & Collections Persistence
+- [x] **Schema Normalization**: Added `saved_repositories` and `collection_repositories` canonical tables.
+- [x] **Saved API**: Implemented canonical `/api/saved` endpoints with backward-compatible `/api/favorites` aliases.
+- [x] **Collections API**: Implemented CRUD and repo-mapping for custom folders.
+- [x] **SavedReposContext**: Created global provider to sync saved state across all components.
+- [x] **UI Integration**: Wired "Save" buttons in `RepoCard` and `RepoDetails` to real backend persistence.
+
+## Phase 6 (Pending)
+- [ ] **AI Summaries & Insights Integration**
+- [ ] **Collection Details UI**
+- [ ] **Technical Audit UI Hardening**

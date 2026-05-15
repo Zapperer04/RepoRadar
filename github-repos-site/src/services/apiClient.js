@@ -132,13 +132,22 @@ export async function getAIExplanation(content) {
 }
 
 export const user = {
-  getFavorites: () => apiCall('/api/favorites'),
-  addFavorite: (repoData) => apiCall('/api/favorites', { method: 'POST', body: JSON.stringify(repoData) }),
-  removeFavorite: (id) => apiCall(`/api/favorites/${id}`, { method: 'DELETE' }),
+  getSaved: () => apiCall('/api/saved'),
+  saveRepo: (repoData) => apiCall('/api/saved', { method: 'POST', body: JSON.stringify(repoData) }),
+  unsaveRepo: (id) => apiCall(`/api/saved/${id}`, { method: 'DELETE' }),
+  checkSaved: (owner, repoName) => apiCall(`/api/saved/check/${owner}/${repoName}`),
+  
   getHistory: () => apiCall('/api/history'),
   clearHistory: () => apiCall('/api/history', { method: 'DELETE' }),
+  
   getCollections: () => apiCall('/api/collections'),
+  getCollection: (id) => apiCall(`/api/collections/${id}`),
   createCollection: (name, description) => apiCall('/api/collections', { method: 'POST', body: JSON.stringify({ name, description }) }),
+  updateCollection: (id, data) => apiCall(`/api/collections/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCollection: (id) => apiCall(`/api/collections/${id}`, { method: 'DELETE' }),
+  addRepoToCollection: (collectionId, repo) => apiCall(`/api/collections/${collectionId}/repos`, { method: 'POST', body: JSON.stringify({ repo }) }),
+  removeRepoFromCollection: (collectionId, savedRepoId) => apiCall(`/api/collections/${collectionId}/repos/${savedRepoId}`, { method: 'DELETE' }),
+  
   updateProfile: (profileData) => apiCall('/api/user/profile', { method: 'PUT', body: JSON.stringify(profileData) })
 };
 

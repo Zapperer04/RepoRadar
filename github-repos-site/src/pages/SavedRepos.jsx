@@ -1,10 +1,11 @@
-import React from 'react';
 import DashboardLayout from '../layouts/DashboardLayout.jsx';
 import RepoGrid from '../components/repo/RepoGrid.jsx';
-import { mockRepos } from '../data/mockRepos.js';
+import Loader from '../components/ui/Loader.jsx';
+import EmptyState from '../components/ui/EmptyState.jsx';
+import { useSavedRepos } from '../hooks/useSavedRepos.js';
 
 const SavedRepos = () => {
-  const savedRepos = mockRepos.filter(repo => repo.isSaved);
+  const { savedRepos, loading } = useSavedRepos();
 
   return (
     <DashboardLayout>
@@ -14,7 +15,18 @@ const SavedRepos = () => {
           <p className="page-subtitle">Your personal stash of tracked open-source projects.</p>
         </header>
         
-        <RepoGrid repos={savedRepos} />
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-8)' }}>
+            <Loader />
+          </div>
+        ) : savedRepos.length > 0 ? (
+          <RepoGrid repos={savedRepos} />
+        ) : (
+          <EmptyState 
+            title="No Saved Repositories" 
+            message="You haven't saved any repositories yet. Explore trending projects to start your stash!"
+          />
+        )}
       </div>
     </DashboardLayout>
   );

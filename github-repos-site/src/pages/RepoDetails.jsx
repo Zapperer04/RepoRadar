@@ -1,5 +1,4 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout.jsx';
 import Card, { CardHeader, CardTitle, CardDescription } from '../components/ui/Card.jsx';
 import Badge from '../components/ui/Badge.jsx';
@@ -8,9 +7,14 @@ import EmptyState from '../components/ui/EmptyState.jsx';
 import Loader from '../components/ui/Loader.jsx';
 import { useRepoData } from '../hooks/useRepoData.js';
 import { repoService } from '../services/repoService.js';
+import { useSavedRepos } from '../hooks/useSavedRepos.js';
+import { useAuth } from '../hooks/useAuth.js';
 
 const RepoDetails = () => {
   const { owner, repoName } = useParams();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { toggleSave, isSaved } = useSavedRepos();
   
   const { data: repo, loading, source } = useRepoData(() => repoService.getRepoDetails(owner, repoName), [owner, repoName]);
   const { data: similarRepos } = useRepoData(() => repoService.getSimilarRepos(owner, repoName), [owner, repoName]);
@@ -34,6 +38,17 @@ const RepoDetails = () => {
       </MainLayout>
     );
   }
+
+  const fullName = repo.fullName || repo.full_name;
+  const saved = isSaved(fullName);
+
+  const handleSave = async () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    await toggleSave(repo);
+  };
 
   return (
     <MainLayout>
@@ -67,8 +82,12 @@ const RepoDetails = () => {
                 <Button variant="secondary" size="lg">Open GitHub</Button>
               </a>
             )}
-            <Button variant={repo.isSaved ? 'secondary' : 'primary'} size="lg">
-              {repo.isSaved ? 'Saved' : 'Save to Stash'}
+            <Button 
+              variant={saved ? 'secondary' : 'primary'} 
+              size="lg"
+              onClick={handleSave}
+            >
+              {saved ? 'Saved' : 'Save to Stash'}
             </Button>
           </div>
         </header>

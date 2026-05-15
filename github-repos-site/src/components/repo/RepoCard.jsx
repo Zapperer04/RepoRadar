@@ -1,11 +1,31 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from '../ui/Card.jsx';
 import Badge from '../ui/Badge.jsx';
 import Button from '../ui/Button.jsx';
+import { useSavedRepos } from '../../hooks/useSavedRepos.js';
+import { useAuth } from '../../hooks/useAuth.js';
 
 const RepoCard = ({ repo }) => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { toggleSave, isSaved } = useSavedRepos();
+  
   if (!repo) return null;
+
+  const fullName = repo.fullName || repo.full_name;
+  const saved = isSaved(fullName);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    
+    await toggleSave(repo);
+  };
 
   return (
     <Card className="rr-repo-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -16,8 +36,8 @@ const RepoCard = ({ repo }) => {
               {repo.name}
             </Link>
           </CardTitle>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={repo.fullName}>
-            {repo.fullName}
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={fullName}>
+            {fullName}
           </div>
         </div>
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', justifyContent: 'flex-end', flexShrink: 0, marginLeft: '8px' }}>
@@ -59,8 +79,12 @@ const RepoCard = ({ repo }) => {
             <Button variant="secondary" title="Open in GitHub">GitHub</Button>
           </a>
         ) : null}
-        <Button variant={repo.isSaved ? 'secondary' : 'ghost'} style={{ minWidth: '80px' }}>
-          {repo.isSaved ? 'Saved' : 'Save'}
+        <Button 
+          variant={saved ? 'secondary' : 'ghost'} 
+          style={{ minWidth: '80px' }}
+          onClick={handleSave}
+        >
+          {saved ? 'Saved' : 'Save'}
         </Button>
       </CardFooter>
     </Card>

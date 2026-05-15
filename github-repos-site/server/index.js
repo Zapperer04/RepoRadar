@@ -27,16 +27,10 @@ app.get('/api/health', repoController.getHealth);
 console.log('[ROUTES] Loading route modules...');
 const repoController = require('./controllers/repo.controller');
 const repoRoutes = require('./routes/repo.routes');
-const searchRoutes = require('./routes/search.routes');
-const hiddenGemsRoutes = require('./routes/hiddenGems.routes');
-const trendingRoutes = require('./routes/trending.routes');
-const domainsRoutes = require('./routes/domains.routes');
-const compareRoutes = require('./routes/compare.routes');
 const savedRoutes = require('./routes/saved.routes');
-const favoriteRoutes = require('./routes/favorites');
+const collectionRoutes = require('./routes/collections.routes');
 const authRoutes = require('./routes/auth');
 const historyRoutes = require('./routes/history');
-const collectionRoutes = require('./routes/collections');
 const userRoutes = require('./routes/user');
 
 console.log('[ROUTES] Registering routes...');
@@ -51,7 +45,13 @@ app.get('/api/domains', repoController.getDomains);
 // Existing routes (commented out or kept if they actually exist and aren't superseded)
 // app.use('/api/compare', compareRoutes);
 app.use('/api/saved', savedRoutes);
-app.use('/api/favorites', favoriteRoutes);
+
+const { verifyToken } = require('./middleware/auth');
+const savedController = require('./controllers/saved.controller');
+app.get('/api/favorites', verifyToken, savedController.getSavedRepos);
+app.post('/api/favorites', verifyToken, savedController.saveRepo);
+app.delete('/api/favorites/:repoId', verifyToken, savedController.unsaveRepo);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/collections', collectionRoutes);

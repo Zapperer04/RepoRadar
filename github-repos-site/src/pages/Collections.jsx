@@ -2,38 +2,58 @@ import React from 'react';
 import DashboardLayout from '../layouts/DashboardLayout.jsx';
 import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
+import Loader from '../components/ui/Loader.jsx';
+import EmptyState from '../components/ui/EmptyState.jsx';
+import { useCollections } from '../hooks/useCollections.js';
 
 const Collections = () => {
-  const collectionData = [
-    { id: 1, name: "Project Ideas", count: 3 },
-    { id: 2, name: "Learn React", count: 5 },
-    { id: 3, name: "AI Tools", count: 8 },
-    { id: 4, name: "Contribute Later", count: 2 }
-  ];
+  const { collections, loading, createCollection, deleteCollection } = useCollections();
+
+  const handleCreate = async () => {
+    const name = prompt('Enter collection name:');
+    if (name) {
+      await createCollection(name);
+    }
+  };
 
   return (
     <DashboardLayout>
       <div className="page-container">
-        <header className="page-header" style={{ marginBottom: 'var(--space-6)' }}>
-          <h1 className="page-title">📁 Collections</h1>
-          <p className="page-subtitle">Organize your saved repositories into curated folders.</p>
+        <header className="page-header" style={{ marginBottom: 'var(--space-6)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 className="page-title">📁 Collections</h1>
+            <p className="page-subtitle">Organize your saved repositories into curated folders.</p>
+          </div>
+          <Button variant="primary" onClick={handleCreate}>+ New Collection</Button>
         </header>
 
-        <div className="grid-4">
-          {collectionData.map(c => (
-            <Card key={c.id}>
-              <CardHeader>
-                <CardTitle>{c.name}</CardTitle>
-              </CardHeader>
-              <CardDescription>
-                {c.count} saved repositories
-              </CardDescription>
-              <CardFooter>
-                <Button variant="secondary" style={{ width: '100%' }}>View Collection</Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-8)' }}>
+            <Loader />
+          </div>
+        ) : collections.length > 0 ? (
+          <div className="grid-4">
+            {collections.map(c => (
+              <Card key={c.id}>
+                <CardHeader>
+                  <CardTitle>{c.name}</CardTitle>
+                </CardHeader>
+                <CardDescription>
+                  {c.item_count || 0} saved repositories
+                </CardDescription>
+                <CardFooter style={{ gap: '8px' }}>
+                  <Button variant="secondary" style={{ flex: 1 }}>View</Button>
+                  <Button variant="ghost" onClick={() => deleteCollection(c.id)}>🗑️</Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <EmptyState 
+            title="No Collections" 
+            message="Organize your repositories into custom collections to keep track of different project ideas or learning paths."
+          />
+        )}
       </div>
     </DashboardLayout>
   );
