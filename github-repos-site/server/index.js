@@ -21,9 +21,11 @@ app.use((req, res, next) => {
 console.log('[MIDDLEWARE] Traffic logger added');
 
 app.get('/', (req, res) => res.json({ status: 'online', service: 'RepoRadar Engine' }));
+app.get('/api/health', repoController.getHealth);
 
 // Load route modules
 console.log('[ROUTES] Loading route modules...');
+const repoController = require('./controllers/repo.controller');
 const repoRoutes = require('./routes/repo.routes');
 const searchRoutes = require('./routes/search.routes');
 const hiddenGemsRoutes = require('./routes/hiddenGems.routes');
@@ -41,7 +43,6 @@ console.log('[ROUTES] Registering routes...');
 app.use('/api/repos', repoRoutes);
 
 // Backward compatible aliases mapping to new repo controller
-const repoController = require('./controllers/repo.controller');
 app.get('/api/search', repoController.searchRepos);
 app.get('/api/hiddenGems', repoController.getHiddenGems);
 app.get('/api/trending', repoController.getTrending);

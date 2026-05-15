@@ -64,4 +64,14 @@
 - [x] **GitHub Service**: Built robust `github.service.js` querying `/search/repositories`.
 - [x] **Scoring Functions**: Created simple, deterministic formulas for Hidden Gem, Growth, Docs, and Maintenance.
 - [x] **Fallback Engine**: Implemented `fallbackRepos.js` backend safety net preventing HTTP 500s during rate limits.
-- [x] **Frontend Hook**: Wired `Home`, `Explore`, `HiddenGems`, `Trending`, `Domains`, and `RepoDetails` to use `useRepoData` and `repoService.js` with `source` indicators.
+## Phase 4.5 Backend API Verification & Fallback Transparency
+- [x] **Route Audit**: Confirmed route order prevents dynamic route swallow. Added `/api/health`.
+- [x] **Diagnostic Injection**: API responses now include `errorMessage` on fallback. Server logs endpoint failures.
+- [x] **Health Check**: Verified token status reporting in health endpoint.
+- [x] **Validation Suite**: Created `scripts/validate-api.js` and integrated into `package.json`.
+- [x] **Frontend Transparency**: Source badges verified across all dynamic pages.
+
+## Phase 5 (Pending)
+- [ ] **Saved Repos & Persistence**
+- [ ] **User Collections**
+- [ ] **AI Summaries**
