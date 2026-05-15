@@ -18,12 +18,12 @@ const fetchWithFallback = async (endpoint, fallbackData) => {
 
 export const repoService = {
   getRepos: async () => {
-    return fetchWithFallback('/repos', mockRepos);
+    return fetchWithFallback('/api/repos', mockRepos);
   },
 
   searchRepos: async (params = {}) => {
     const query = new URLSearchParams(params).toString();
-    const endpoint = `/repos/search${query ? `?${query}` : ''}`;
+    const endpoint = `/api/repos/search${query ? `?${query}` : ''}`;
     let fallback = mockRepos;
     if (params.q) {
       fallback = fallback.filter(r => r.name.toLowerCase().includes(params.q.toLowerCase()));
@@ -32,25 +32,24 @@ export const repoService = {
   },
 
   getHiddenGems: async () => {
-    return fetchWithFallback('/repos/hidden-gems', mockRepos.filter(r => r.isHiddenGem));
+    return fetchWithFallback('/api/repos/hidden-gems', mockRepos.filter(r => r.isHiddenGem));
   },
 
   getTrending: async () => {
-    return fetchWithFallback('/repos/trending', mockRepos.filter(r => r.isTrending));
+    return fetchWithFallback('/api/repos/trending', mockRepos.filter(r => r.isTrending));
   },
 
   getDomains: async () => {
-    // Domains count usually rely on constants on frontend anyway
-    return fetchWithFallback('/repos/domains', []);
+    return fetchWithFallback('/api/repos/domains', []);
   },
 
   getReposByDomain: async (domain) => {
-    return fetchWithFallback(`/repos/domain/${encodeURIComponent(domain)}`, mockRepos.filter(r => r.domain === domain));
+    return fetchWithFallback(`/api/repos/domain/${encodeURIComponent(domain)}`, mockRepos.filter(r => r.domain === domain));
   },
 
   getRepoDetails: async (owner, repoName) => {
     const fallback = mockRepos.find(r => r.owner === owner && r.name === repoName) || null;
-    return fetchWithFallback(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}`, fallback);
+    return fetchWithFallback(`/api/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}`, fallback);
   },
 
   getSimilarRepos: async (owner, repoName) => {
@@ -59,6 +58,6 @@ export const repoService = {
     if (fallbackTarget) {
       fallbacks = mockRepos.filter(r => r.id !== fallbackTarget.id && (r.domain === fallbackTarget.domain || r.language === fallbackTarget.language));
     }
-    return fetchWithFallback(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/similar`, fallbacks);
+    return fetchWithFallback(`/api/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repoName)}/similar`, fallbacks);
   }
 };

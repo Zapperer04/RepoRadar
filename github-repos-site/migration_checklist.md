@@ -78,6 +78,13 @@
 - [x] **SavedReposContext**: Created global provider to sync saved state across all components.
 - [x] **UI Integration**: Wired "Save" buttons in `RepoCard` and `RepoDetails` to real backend persistence.
 
+## Phase 5.5: Auth & Persistence Verification
+- [x] **Diagnostic Audit**: Identified and fixed critical routing and API helper bugs.
+- [x] **API Ordering**: Fixed `index.js` require sequence.
+- [x] **Service Hardening**: Unified `apiClient` helpers and added `/api` prefixes to `repoService`.
+- [x] **State Synchronization**: Resolved `useSavedRepos` hook/context conflict.
+- [x] **Validation Script**: Created `scripts/validate-saved-api.js` for authenticated testing.
+
 ## Phase 6 (Pending)
 - [ ] **AI Summaries & Insights Integration**
 - [ ] **Collection Details UI**

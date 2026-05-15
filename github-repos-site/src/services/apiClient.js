@@ -189,6 +189,10 @@ const apiClient = {
   getHiddenGems,
   getTrendingByGrowth,
   checkHealth,
+  get: (endpoint, options) => apiCall(endpoint, { ...options, method: 'GET' }),
+  post: (endpoint, body, options) => apiCall(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) }),
+  put: (endpoint, body, options) => apiCall(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) }),
+  delete: (endpoint, options) => apiCall(endpoint, { ...options, method: 'DELETE' }),
   API_URL
 };
 

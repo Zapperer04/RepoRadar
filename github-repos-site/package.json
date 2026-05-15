@@ -35,7 +35,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "validate:phase1": "node scripts/validate-phase1.js",
-    "validate:api": "node scripts/validate-api.js"
+    "validate:api": "node scripts/validate-api.js",
+    "validate:saved": "node scripts/validate-saved-api.js"
   },
   "eslintConfig": {
     "extends": [

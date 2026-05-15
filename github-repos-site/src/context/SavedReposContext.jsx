@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import savedService from '../services/savedService';
 import { useAuth } from '../hooks/useAuth';
 
-const SavedReposContext = createContext();
+export const SavedReposContext = createContext();
 
 export const SavedReposProvider = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -32,28 +32,17 @@ export const SavedReposProvider = ({ children }) => {
     fetchSaved();
   }, [fetchSaved]);
 
-  const toggleSave = async (repo) => {
-    if (!isAuthenticated) {
-      // Redirect to login or handle unauthenticated state
-      return { success: false, error: 'Unauthorized' };
-    }
+  const isSaved = useCallback((fullName) => {
+    return savedRepos.some(r => r.full_name === fullName || r.fullName === fullName);
+  }, [savedRepos]);
 
-    const fullName = repo.fullName || repo.full_name;
-    const existing = savedRepos.find(r => r.full_name === fullName || r.fullName === fullName);
-
+  const saveRepo = async (repo) => {
+    if (!isAuthenticated) return { success: false, error: 'Unauthorized' };
     try {
-      if (existing) {
-        const res = await savedService.unsaveRepo(existing.id);
-        if (res.success) {
-          setSavedRepos(prev => prev.filter(r => r.id !== existing.id));
-          return { success: true, saved: false };
-        }
-      } else {
-        const res = await savedService.saveRepo(repo);
-        if (res.success) {
-          setSavedRepos(prev => [res.data, ...prev]);
-          return { success: true, saved: true };
-        }
+      const res = await savedService.saveRepo(repo);
+      if (res.success) {
+        setSavedRepos(prev => [res.data, ...prev]);
+        return { success: true, data: res.data };
       }
     } catch (err) {
       return { success: false, error: err.message };
@@ -61,19 +50,47 @@ export const SavedReposProvider = ({ children }) => {
     return { success: false };
   };
 
-  const isSaved = useCallback((fullName) => {
-    return savedRepos.some(r => r.full_name === fullName || r.fullName === fullName);
-  }, [savedRepos]);
+  const unsaveRepo = async (repoId) => {
+    if (!isAuthenticated) return { success: false, error: 'Unauthorized' };
+    try {
+      const res = await savedService.unsaveRepo(repoId);
+      if (res.success) {
+        setSavedRepos(prev => prev.filter(r => r.id !== repoId && r.full_name !== repoId && r.fullName !== repoId));
+        return { success: true };
+      }
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+    return { success: false };
+  };
+
+  const toggleSave = async (repo) => {
+    if (!isAuthenticated) return { success: false, error: 'Unauthorized' };
+
+    const fullName = repo.fullName || repo.full_name;
+    const existing = savedRepos.find(r => r.full_name === fullName || r.fullName === fullName);
+
+    if (existing) {
+      return await unsaveRepo(existing.id);
+    } else {
+      return await saveRepo(repo);
+    }
+  };
 
   return (
-    <SavedReposContext.Provider value={{ savedRepos, loading, error, toggleSave, isSaved, refreshSaved: fetchSaved }}>
+    <SavedReposContext.Provider value={{ 
+      savedRepos, 
+      loading, 
+      error, 
+      toggleSave, 
+      saveRepo,
+      unsaveRepo,
+      isSaved, 
+      refreshSaved: fetchSaved 
+    }}>
       {children}
     </SavedReposContext.Provider>
   );
 };
 
-export const useSavedRepos = () => {
-  const context = useContext(SavedReposContext);
-  if (!context) throw new Error('useSavedRepos must be used within SavedReposProvider');
-  return context;
-};
+export default SavedReposContext;

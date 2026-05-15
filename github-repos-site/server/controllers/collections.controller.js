@@ -2,6 +2,7 @@ const db = require('../db');
 
 exports.getCollections = async (req, res) => {
   try {
+    console.log(`[AUTH] User ${req.userId} fetching collections`);
     const collections = await db.getAll(
       `SELECT c.*, COUNT(cr.id) as item_count
        FROM collections c
@@ -13,7 +14,7 @@ exports.getCollections = async (req, res) => {
     );
     res.json({ success: true, data: collections });
   } catch (error) {
-    console.error('getCollections error:', error);
+    console.error(`[ERROR] getCollections for user ${req.userId}:`, error.message);
     res.status(500).json({ success: false, error: 'Failed to fetch collections' });
   }
 };
@@ -21,6 +22,7 @@ exports.getCollections = async (req, res) => {
 exports.createCollection = async (req, res) => {
   try {
     const { name, description } = req.body;
+    console.log(`[AUTH] User ${req.userId} creating collection: ${name}`);
     if (!name) return res.status(400).json({ success: false, error: 'Name is required' });
 
     const collection = await db.getOne(
@@ -32,7 +34,7 @@ exports.createCollection = async (req, res) => {
 
     res.status(201).json({ success: true, data: { ...collection, item_count: 0 } });
   } catch (error) {
-    console.error('createCollection error:', error);
+    console.error(`[ERROR] createCollection for user ${req.userId}:`, error.message);
     res.status(500).json({ success: false, error: 'Failed to create collection' });
   }
 };
@@ -40,6 +42,7 @@ exports.createCollection = async (req, res) => {
 exports.getCollection = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(`[AUTH] User ${req.userId} fetching collection details for id: ${id}`);
     const collection = await db.getOne(
       'SELECT * FROM collections WHERE id = $1 AND user_id = $2',
       [id, req.userId]
@@ -58,7 +61,7 @@ exports.getCollection = async (req, res) => {
 
     res.json({ success: true, data: { ...collection, repos } });
   } catch (error) {
-    console.error('getCollection error:', error);
+    console.error(`[ERROR] getCollection for user ${req.userId}:`, error.message);
     res.status(500).json({ success: false, error: 'Failed to fetch collection details' });
   }
 };
@@ -67,6 +70,7 @@ exports.updateCollection = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description } = req.body;
+    console.log(`[AUTH] User ${req.userId} updating collection id: ${id}`);
 
     const collection = await db.getOne(
       `UPDATE collections 
@@ -82,7 +86,7 @@ exports.updateCollection = async (req, res) => {
 
     res.json({ success: true, data: collection });
   } catch (error) {
-    console.error('updateCollection error:', error);
+    console.error(`[ERROR] updateCollection for user ${req.userId}:`, error.message);
     res.status(500).json({ success: false, error: 'Failed to update collection' });
   }
 };
@@ -90,6 +94,7 @@ exports.updateCollection = async (req, res) => {
 exports.deleteCollection = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(`[AUTH] User ${req.userId} deleting collection id: ${id}`);
     const result = await db.query(
       'DELETE FROM collections WHERE id = $1 AND user_id = $2',
       [id, req.userId]
@@ -99,7 +104,7 @@ exports.deleteCollection = async (req, res) => {
 
     res.json({ success: true, message: 'Collection deleted' });
   } catch (error) {
-    console.error('deleteCollection error:', error);
+    console.error(`[ERROR] deleteCollection for user ${req.userId}:`, error.message);
     res.status(500).json({ success: false, error: 'Failed to delete collection' });
   }
 };
@@ -108,6 +113,7 @@ exports.addRepoToCollection = async (req, res) => {
   try {
     const { id } = req.params;
     const { repo, savedRepoId } = req.body;
+    console.log(`[AUTH] User ${req.userId} adding repo to collection id: ${id}`);
 
     // Verify collection ownership
     const collection = await db.getOne('SELECT id FROM collections WHERE id = $1 AND user_id = $2', [id, req.userId]);
@@ -145,7 +151,7 @@ exports.addRepoToCollection = async (req, res) => {
 
     res.status(201).json({ success: true, message: 'Added to collection' });
   } catch (error) {
-    console.error('addRepoToCollection error:', error);
+    console.error(`[ERROR] addRepoToCollection for user ${req.userId}:`, error.message);
     res.status(500).json({ success: false, error: 'Failed to add repository to collection' });
   }
 };
@@ -153,6 +159,7 @@ exports.addRepoToCollection = async (req, res) => {
 exports.removeRepoFromCollection = async (req, res) => {
   try {
     const { id, savedRepoId } = req.params;
+    console.log(`[AUTH] User ${req.userId} removing repo ${savedRepoId} from collection id: ${id}`);
 
     // Verify collection ownership
     const collection = await db.getOne('SELECT id FROM collections WHERE id = $1 AND user_id = $2', [id, req.userId]);
@@ -167,7 +174,7 @@ exports.removeRepoFromCollection = async (req, res) => {
 
     res.json({ success: true, message: 'Removed from collection' });
   } catch (error) {
-    console.error('removeRepoFromCollection error:', error);
+    console.error(`[ERROR] removeRepoFromCollection for user ${req.userId}:`, error.message);
     res.status(500).json({ success: false, error: 'Failed to remove repository from collection' });
   }
 };
