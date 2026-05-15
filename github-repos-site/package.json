@@ -28,7 +28,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "set PORT=5006 && react-scripts start",
     "server": "node server/index.js",
     "dev": "npm start",
     "build": "react-scripts build",
@@ -36,8 +36,10 @@
     "eject": "react-scripts eject",
     "validate:phase1": "node scripts/validate-phase1.js",
     "validate:api": "node scripts/validate-api.js",
-    "validate:saved": "node scripts/validate-saved-api.js"
+    "validate:saved": "node scripts/validate-saved-api.js",
+    "validate:auth": "node scripts/validate-auth-api.js"
   },
+  "proxy": "http://localhost:5005",
   "eslintConfig": {
     "extends": [
       "react-app",

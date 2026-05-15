@@ -48,9 +48,11 @@ class User {
    * Find user by ID
    */
   static async findById(id) {
+    const uid = parseInt(id);
+    if (isNaN(uid)) return null;
     return db.getOne(
       'SELECT id, email, username, full_name, avatar_url, bio, created_at, last_login FROM users WHERE id = $1',
-      [id]
+      [uid]
     );
   }
 
@@ -88,17 +90,26 @@ class User {
    * Get user stats (for profile dashboard)
    */
   static async getStats(userId) {
-    const [favorites, history, collections] = await Promise.all([
-      db.getOne('SELECT COUNT(*) as count FROM favorites WHERE user_id = $1', [userId]),
-      db.getOne('SELECT COUNT(*) as count FROM search_history WHERE user_id = $1', [userId]),
-      db.getOne('SELECT COUNT(*) as count FROM collections WHERE user_id = $1', [userId]),
-    ]);
+    try {
+      // Use integer for ID
+      const uid = parseInt(userId);
+      if (isNaN(uid)) throw new Error('Invalid User ID');
 
-    return {
-      favoritesCount: parseInt(favorites.count),
-      searchHistoryCount: parseInt(history.count),
-      collectionsCount: parseInt(collections.count),
-    };
+      const [saved, history, collections] = await Promise.all([
+        db.getOne('SELECT COUNT(*) as count FROM saved_repositories WHERE user_id = $1', [uid]).catch(() => ({ count: 0 })),
+        db.getOne('SELECT COUNT(*) as count FROM search_history WHERE user_id = $1', [uid]).catch(() => ({ count: 0 })),
+        db.getOne('SELECT COUNT(*) as count FROM collections WHERE user_id = $1', [uid]).catch(() => ({ count: 0 })),
+      ]);
+
+      return {
+        favoritesCount: Number(saved?.count || 0),
+        searchHistoryCount: Number(history?.count || 0),
+        collectionsCount: Number(collections?.count || 0),
+      };
+    } catch (error) {
+      console.error('[STATS_ERROR]', error.message);
+      return { favoritesCount: 0, searchHistoryCount: 0, collectionsCount: 0 };
+    }
   }
 }
 

@@ -20,8 +20,11 @@ async function initializeDatabase() {
     
     // Execute each statement
     for (const statement of statements) {
-      if (statement.trim()) {
-        await db.query(statement);
+      const trimmed = statement.trim();
+      if (trimmed) {
+        process.stdout.write(`  Executing: ${trimmed.substring(0, 50).replace(/\n/g, ' ')}... `);
+        await db.query(trimmed);
+        console.log('OK');
       }
     }
     

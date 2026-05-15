@@ -3,7 +3,7 @@
  * Centralized API communication with built-in error handling and timeouts
  */
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5005';
+const API_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5005';
 const DEFAULT_TIMEOUT = 15000;
 
 function createAbortController(timeoutMs = DEFAULT_TIMEOUT) {
@@ -148,6 +148,8 @@ export const user = {
   addRepoToCollection: (collectionId, repo) => apiCall(`/api/collections/${collectionId}/repos`, { method: 'POST', body: JSON.stringify({ repo }) }),
   removeRepoFromCollection: (collectionId, savedRepoId) => apiCall(`/api/collections/${collectionId}/repos/${savedRepoId}`, { method: 'DELETE' }),
   
+  getProfile: () => apiCall('/api/user/profile'),
+  getStats: () => apiCall('/api/user/stats'),
   updateProfile: (profileData) => apiCall('/api/user/profile', { method: 'PUT', body: JSON.stringify(profileData) })
 };
 

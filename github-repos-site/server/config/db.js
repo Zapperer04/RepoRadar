@@ -7,13 +7,24 @@ const { Pool } = require('pg');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'goat_repo_finder',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-});
+const poolConfig = process.env.DATABASE_URL 
+  ? { connectionString: process.env.DATABASE_URL }
+  : {
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 5432,
+      database: process.env.DB_NAME || 'goat_repo_finder',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || 'postgres',
+    };
+
+if (process.env.DATABASE_URL) {
+  const redacted = process.env.DATABASE_URL.replace(/:([^:@]+)@/, ':****@');
+  console.log('[DB] Connecting via URL:', redacted);
+} else {
+  console.log('[DB] Connecting via params:', { ...poolConfig, password: '****' });
+}
+
+const pool = new Pool(poolConfig);
 
 pool.on('connect', () => {
   console.log('✅ Connected to PostgreSQL');

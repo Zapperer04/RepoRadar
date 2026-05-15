@@ -15,6 +15,7 @@ const router = express.Router();
  */
 router.get('/profile', verifyToken, async (req, res) => {
   try {
+    console.log(`[USER] Fetching profile for user ${req.userId}`);
     const user = await User.findById(req.userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -29,8 +30,12 @@ router.get('/profile', verifyToken, async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching profile:', error);
-    res.status(500).json({ error: 'Failed to fetch profile' });
+    console.error('[PROFILE_CRASH] Error fetching profile:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch profile', 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
@@ -41,6 +46,7 @@ router.get('/profile', verifyToken, async (req, res) => {
 router.put('/profile', verifyToken, async (req, res) => {
   try {
     const { fullName, avatarUrl, bio } = req.body;
+    console.log(`[USER] Updating profile for user ${req.userId}`);
 
     const user = await User.updateProfile(req.userId, {
       fullName: fullName || '',

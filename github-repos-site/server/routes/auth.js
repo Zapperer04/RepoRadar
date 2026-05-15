@@ -121,13 +121,24 @@ router.get('/me', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    res.json({ user });
+    res.json({ 
+      success: true, 
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        fullName: user.full_name,
+        avatarUrl: user.avatar_url,
+        bio: user.bio,
+        created_at: user.created_at
+      }
+    });
   } catch (error) {
     console.error('Error fetching user:', error);
-    res.status(500).json({ error: 'Failed to fetch user' });
+    res.status(500).json({ success: false, error: 'Failed to fetch user' });
   }
 });
 

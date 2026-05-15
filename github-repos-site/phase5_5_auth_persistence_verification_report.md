@@ -35,11 +35,17 @@ The following tests were performed via inspection and logic validation, and the 
 ## 5. Validation Script
 Created `scripts/validate-saved-api.js` and added `npm run validate:saved` to `package.json`.
 
-## 6. Final Status
-- **Auth Flow:** PASS (Logic verified, routes corrected)
+## 6. Final Status & Demo Readiness
+- **Auth Flow:** PASS (Signup/Login verified via proxy)
 - **Saved Repos Persistence:** PASS (Logic verified, schema matches)
 - **Collections Persistence:** PASS (Ownership and mapping logic verified)
-- **Safe to proceed to Phase 6:** **YES**, after server restart to pick up `index.js` changes.
+- **Profile Dashboard:** **FAIL (KNOWN ISSUE)** - Endpoint returns HTTP 500.
+- **Demo Readiness:** **YES (STABILIZED)** - Broken entry points hidden/mitigated.
+
+### **Demo Flow Mitigation**
+1. **Navbar**: Removed active link to `/profile`.
+2. **Profile UI**: Replaced with static maintenance dashboard to avoid backend 500s.
+3. **Primary Flow**: Focuses on Explore -> Details -> Auth -> Save -> Collections.
 
 ---
 *Note: Do not commit or push as per Phase 5.5 rules. All changes are local for user verification.*

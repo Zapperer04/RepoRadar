@@ -85,6 +85,11 @@
 - [x] **State Synchronization**: Resolved `useSavedRepos` hook/context conflict.
 - [x] **Validation Script**: Created `scripts/validate-saved-api.js` for authenticated testing.
 
+## Known Issues (Demo Stabilization)
+- **Profile Dashboard (HTTP 500)**: The `/api/user/profile` and `/api/auth/me` endpoints currently return 500. 
+- **Mitigation**: Disabled profile backend calls and added maintenance UI to `/profile`. Removed links from Navbar.
+- **Next Step**: Standardize profile data contract and debug backend model/controller.
+
 ## Phase 6 (Pending)
 - [ ] **AI Summaries & Insights Integration**
 - [ ] **Collection Details UI**

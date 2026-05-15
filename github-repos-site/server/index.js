@@ -16,17 +16,16 @@ const savedController = require('./controllers/saved.controller');
 const { verifyToken } = require('./middleware/auth');
 
 const app = express();
-const PORT = process.env.PORT || 5005;
+// Force backend to 5005 as requested, avoiding conflict with frontend's PORT env
+const PORT = 5005; 
 
 app.use(cors());
 app.use(express.json());
 
 // Traffic logger
 app.use((req, res, next) => {
-  const msg = `[TRAFFIC] ${req.method} ${req.url}\n`;
-  if (req.url.startsWith('/api')) {
-    console.log(msg);
-  }
+  console.log(`[REQUEST] ${req.method} ${req.url}`);
+  // Removed problematic body logging to prevent crash
   next();
 });
 
@@ -42,6 +41,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/collections', collectionRoutes);
 app.use('/api/user', userRoutes);
+app.get('/api/me', verifyToken, (req, res) => res.redirect(307, '/api/auth/me'));
 
 // Backward compatible aliases
 app.get('/api/search', repoController.searchRepos);
@@ -90,7 +90,8 @@ app.use((req, res) => {
     process.stdin.resume();
     
   } catch (error) {
-    console.error('❌ Failed to start server:', error.message);
+    console.error('❌ CRITICAL STARTUP ERROR:', error);
+    if (error.stack) console.error(error.stack);
     process.exit(1);
   }
 })();
