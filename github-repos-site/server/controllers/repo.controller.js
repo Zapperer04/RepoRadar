@@ -14,12 +14,14 @@ function buildResponse(data, isFallback = false, errorMessage = null) {
 exports.getHealth = (req, res) => {
   res.json({
     success: true,
-    service: "RepoRadar API",
     status: "ok",
+    service: "RepoRadar API",
+    uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     githubTokenConfigured: !!process.env.GITHUB_TOKEN
   });
 };
+
 
 // Ensure the fallback behaves like the real mock so UI keeps working.
 function filterFallback(filterFn) {

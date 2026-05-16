@@ -16,10 +16,28 @@ const savedController = require('./controllers/saved.controller');
 const { verifyToken } = require('./middleware/auth');
 
 const app = express();
-// Force backend to 5005 as requested, avoiding conflict with frontend's PORT env
-const PORT = 5005; 
+// Dynamic PORT for deployment, fallback to 5005 for local
+const PORT = process.env.PORT || 5005; 
 
-app.use(cors());
+// Safe CORS origins for production and local development
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5006",
+  "http://localhost:3000"
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Traffic logger
