@@ -1,5 +1,5 @@
 import React from 'react';
-import Input from '../ui/Input.jsx';
+
 import { DOMAINS } from '../../constants/domains.js';
 import { LANGUAGES, ACTIVITY_LEVELS, REPO_TYPES, STAR_RANGES } from '../../constants/filters.js';
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Card, { CardHeader, CardTitle, CardDescription, CardFooter } from '../ui/Card.jsx';
+import Card, { CardHeader, CardTitle, CardDescription } from '../ui/Card.jsx';
 import Badge from '../ui/Badge.jsx';
 import Button from '../ui/Button.jsx';
 import { useSavedRepos } from '../../hooks/useSavedRepos.js';
