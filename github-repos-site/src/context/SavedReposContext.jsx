@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import savedService from '../services/savedService';
 import { useAuth } from '../hooks/useAuth';
+import { normalizeRepo } from '../utils/normalizeRepo';
 
 export const SavedReposContext = createContext();
 
@@ -18,8 +19,10 @@ export const SavedReposProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await savedService.getSavedRepos();
-      if (response.success) {
-        setSavedRepos(response.data);
+      if (response.success && Array.isArray(response.data)) {
+        // Task 2: Normalize data from database
+        const normalized = response.data.map(normalizeRepo);
+        setSavedRepos(normalized);
       }
     } catch (err) {
       setError(err.message);
@@ -33,16 +36,20 @@ export const SavedReposProvider = ({ children }) => {
   }, [fetchSaved]);
 
   const isSaved = useCallback((fullName) => {
-    return savedRepos.some(r => r.full_name === fullName || r.fullName === fullName);
+    return savedRepos.some(r => r.fullName === fullName);
   }, [savedRepos]);
 
   const saveRepo = async (repo) => {
     if (!isAuthenticated) return { success: false, error: 'Unauthorized' };
     try {
-      const res = await savedService.saveRepo(repo);
+      // Task 4: Normalize payload before sending to backend
+      const normalizedPayload = normalizeRepo(repo);
+      const res = await savedService.saveRepo(normalizedPayload);
+      
       if (res.success) {
-        setSavedRepos(prev => [res.data, ...prev]);
-        return { success: true, data: res.data };
+        const newlySaved = normalizeRepo(res.data);
+        setSavedRepos(prev => [newlySaved, ...prev]);
+        return { success: true, data: newlySaved };
       }
     } catch (err) {
       return { success: false, error: err.message };
@@ -55,7 +62,7 @@ export const SavedReposProvider = ({ children }) => {
     try {
       const res = await savedService.unsaveRepo(repoId);
       if (res.success) {
-        setSavedRepos(prev => prev.filter(r => r.id !== repoId && r.full_name !== repoId && r.fullName !== repoId));
+        setSavedRepos(prev => prev.filter(r => r.id !== repoId && r.fullName !== repoId));
         return { success: true };
       }
     } catch (err) {
@@ -67,13 +74,13 @@ export const SavedReposProvider = ({ children }) => {
   const toggleSave = async (repo) => {
     if (!isAuthenticated) return { success: false, error: 'Unauthorized' };
 
-    const fullName = repo.fullName || repo.full_name;
-    const existing = savedRepos.find(r => r.full_name === fullName || r.fullName === fullName);
+    const normalized = normalizeRepo(repo);
+    const existing = savedRepos.find(r => r.fullName === normalized.fullName);
 
     if (existing) {
       return await unsaveRepo(existing.id);
     } else {
-      return await saveRepo(repo);
+      return await saveRepo(normalized);
     }
   };
 

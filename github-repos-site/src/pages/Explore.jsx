@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout.jsx';
 import RepoGrid from '../components/repo/RepoGrid.jsx';
@@ -9,17 +9,21 @@ import Loader from '../components/ui/Loader.jsx';
 import Badge from '../components/ui/Badge.jsx';
 import { useRepoData } from '../hooks/useRepoData.js';
 import { repoService } from '../services/repoService.js';
+import { normalizeRepo } from '../utils/normalizeRepo.js';
 
 const Explore = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const initialDomain = searchParams.get('domain') || '';
+  const urlDomain = searchParams.get('domain');
 
   const { data: serverRepos, source, loading } = useRepoData(repoService.getRepos);
 
+  // Task 2: Normalize server repos immediately
+  const normalizedRepos = useMemo(() => (serverRepos || []).map(normalizeRepo), [serverRepos]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
-    domain: initialDomain,
+    domain: '',
     language: '',
     stars: '',
     activityLevel: '',
@@ -27,11 +31,18 @@ const Explore = () => {
     isHiddenGem: false,
     isBeginnerFriendly: false
   });
+
+  // Task 5: Effect to sync URL domain to filters
+  useEffect(() => {
+    if (urlDomain) {
+      setFilters(prev => ({ ...prev, domain: urlDomain }));
+    }
+  }, [urlDomain]);
+
   const [sort, setSort] = useState('hiddenGemScore');
 
   const filteredAndSortedRepos = useMemo(() => {
-    const baseRepos = serverRepos || [];
-    return baseRepos.filter(repo => {
+    return normalizedRepos.filter(repo => {
       // Search
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -47,9 +58,9 @@ const Explore = () => {
         }
       }
       
-      // Filters
-      if (filters.domain && repo.domain !== filters.domain) return false;
-      if (filters.language && repo.language !== filters.language) return false;
+      // Filters (Case-insensitive for robust matching)
+      if (filters.domain && repo.domain.toLowerCase() !== filters.domain.toLowerCase()) return false;
+      if (filters.language && repo.language.toLowerCase() !== filters.language.toLowerCase()) return false;
       if (filters.activityLevel && repo.activityLevel !== filters.activityLevel) return false;
       if (filters.repoType && repo.repoType !== filters.repoType) return false;
       if (filters.isHiddenGem && !repo.isHiddenGem) return false;
@@ -66,11 +77,11 @@ const Explore = () => {
       return true;
     }).sort((a, b) => {
       if (sort === 'lastUpdated') {
-        return new Date(b.lastUpdated) - new Date(a.lastUpdated);
+        return new Date(b.lastUpdated || 0) - new Date(a.lastUpdated || 0);
       }
       return (b[sort] || 0) - (a[sort] || 0);
     });
-  }, [searchQuery, filters, sort]);
+  }, [normalizedRepos, searchQuery, filters, sort]);
 
   const SidebarContent = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
@@ -109,3 +120,4 @@ const Explore = () => {
 };
 
 export default Explore;
+

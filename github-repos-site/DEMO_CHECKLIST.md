@@ -33,12 +33,19 @@
 - [ ] Create a new collection (e.g., "AI Tools")
 - [ ] **Verify**: Collection card appears
 
+## ✨ Visual Polish & Stability
+- [x] **RepoCard Layout**: Action buttons aligned in a consistent 4-column grid (2 on mobile).
+- [x] **Footer Stability**: Centered and padded to match page container; no horizontal overflow.
+- [x] **State Feedback**: Visible "Saving..." and "Removing..." text on interaction.
+- [x] **Animations**: Smooth fade/scale removal on Saved page.
+
 ## ⚠️ Known Issues & Mitigations
 | Issue | Status | Mitigation |
 | :--- | :--- | :--- |
 | **Profile Dashboard** | 🔴 FAIL | Entry points hidden from Navbar; Page replaced with maintenance UI. |
 | **Search History** | 🟡 PARTIAL | Backend endpoint exists, but UI integration is minimal. |
 | **GitHub Rate Limit** | 🟢 STABLE | Fallback data layer (`fallbackRepos.js`) will trigger automatically if API fails. |
+
 
 ## 📦 Technical Notes
 - **Persistence**: Uses `saved_repositories` and `collections` canonical tables.

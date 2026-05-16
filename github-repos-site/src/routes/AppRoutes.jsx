@@ -16,6 +16,7 @@ import RepoDetails from '../pages/RepoDetails.jsx';
 // Pages - Protected
 import Profile from '../pages/Profile.jsx';
 import Collections from '../pages/Collections.jsx';
+import CollectionDetails from '../pages/CollectionDetails.jsx';
 import SavedRepos from '../pages/SavedRepos.jsx';
 
 const AppRoutes = () => {
@@ -27,7 +28,6 @@ const AppRoutes = () => {
       <Route path="/hidden-gems" element={<HiddenGems />} />
       <Route path="/trending" element={<Trending />} />
       <Route path="/domains" element={<Domains />} />
-      <Route path="/stash" element={<SaveToCollectionModal />} />
       
       {/* Backward Compatibility Redirects */}
       <Route path="/search" element={<Navigate replace to="/explore" />} />
@@ -41,6 +41,7 @@ const AppRoutes = () => {
       {/* Protected Routes */}
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/collections" element={<ProtectedRoute><Collections /></ProtectedRoute>} />
+      <Route path="/collections/:id" element={<ProtectedRoute><CollectionDetails /></ProtectedRoute>} />
       <Route path="/saved" element={<ProtectedRoute><SavedRepos /></ProtectedRoute>} />
       
       {/* Repo Details */}
@@ -48,5 +49,6 @@ const AppRoutes = () => {
     </Routes>
   );
 };
+
 
 export default AppRoutes;

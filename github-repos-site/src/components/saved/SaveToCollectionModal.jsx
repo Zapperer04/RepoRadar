@@ -1,109 +1,160 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { user as userApi } from '../../services/apiClient';
-import RepoCard from '../repo/RepoCard.jsx';
-import RepoModal from '../repo/RepoModal.jsx';
+import React, { useState } from 'react';
+import Button from '../ui/Button.jsx';
+import Card from '../ui/Card.jsx';
+import { useCollections } from '../../hooks/useCollections.js';
+import Loader from '../ui/Loader.jsx';
 
-const SaveToCollectionModal = () => {
-  const { isAuthenticated } = useAuth();
-  const [repos, setRepos] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [selectedRepo, setSelectedRepo] = useState(null);
+const SaveToCollectionModal = ({ repo, onClose }) => {
+  const { collections, loading, addRepoToCollection, createCollection } = useCollections();
+  const [isAdding, setIsAdding] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newName, setNewName] = useState('');
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    setError('');
-    
+  const handleAddToCollection = async (collectionId) => {
+    setIsAdding(true);
+    setError(null);
     try {
-      if (isAuthenticated) {
-        const data = await userApi.getFavorites();
-        const dbRepos = data.favorites || [];
-        
-        localStorage.setItem('goat_favorites', JSON.stringify(dbRepos.map(f => ({
-          id: f.repo_id,
-          full_name: f.repo_name,
-          html_url: f.repo_url,
-          stargazers_count: f.repo_stars,
-          language: f.repo_language,
-          description: f.repo_description
-        }))));
-        
-        setRepos(dbRepos);
+      const ok = await addRepoToCollection(collectionId, repo);
+      if (ok) {
+        setSuccess(true);
+        setTimeout(() => {
+          onClose();
+        }, 1500);
       } else {
-        const saved = JSON.parse(localStorage.getItem('goat_favorites') || '[]');
-        setRepos(saved);
+        setError('Failed to add to collection. It might already be there.');
       }
     } catch (err) {
-      setError(err.message || 'Failed to load your stash');
+      setError(err.message);
     } finally {
-      setIsLoading(false);
+      setIsAdding(false);
     }
-  }, [isAuthenticated]);
+  };
 
-  useEffect(() => {
-    loadData();
-    
-    if (!isAuthenticated) {
-      window.addEventListener('storage', loadData);
-      return () => window.removeEventListener('storage', loadData);
+  const handleCreateAndAdd = async (e) => {
+    e.preventDefault();
+    if (!newName) return;
+
+    setIsAdding(true);
+    try {
+      const newCol = await createCollection(newName);
+      if (newCol) {
+        await handleAddToCollection(newCol.id);
+      }
+    } catch (err) {
+      setError(err.message);
+      setIsAdding(false);
     }
-  }, [loadData, isAuthenticated]);
+  };
 
   return (
-    <div className="stash-page">
-      <header className="page-header">
-        <h1 className="page-title">{isAuthenticated ? '⭐ My Vault' : '❤️ My Stash'}</h1>
-        <p className="page-subtitle">
-          {repos.length === 0 
-            ? "Your collection is currently empty." 
-            : `You have ${repos.length} ${repos.length === 1 ? 'gem' : 'gems'} saved.`
-          }
-          {!isAuthenticated && repos.length > 0 && " (Sign in to sync these across devices)"}
+    <div className="modal-overlay" onClick={onClose} style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000,
+      backdropFilter: 'blur(4px)'
+    }}>
+      <Card style={{ 
+        width: '100%', 
+        maxWidth: '450px', 
+        padding: 'var(--space-6)',
+        backgroundColor: 'var(--bg-card)',
+        maxHeight: '80vh',
+        overflowY: 'auto'
+      }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Add to Collection</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+        </div>
+
+        <p style={{ color: 'var(--text-secondary)', marginBottom: 'var(--space-6)', fontSize: '0.9rem' }}>
+          Organizing <strong>{repo.fullName}</strong>
         </p>
-      </header>
 
-      {error && <div className="error-banner">⚠️ {error}</div>}
+        {success ? (
+          <div style={{ textAlign: 'center', padding: 'var(--space-8)', color: 'var(--success)' }}>
+            <div style={{ fontSize: '3rem', marginBottom: 'var(--space-2)' }}>✅</div>
+            <p style={{ fontWeight: 600 }}>Successfully added!</p>
+          </div>
+        ) : (
+          <>
+            {error && <div style={{ color: 'var(--danger)', marginBottom: 'var(--space-4)', fontSize: '0.85rem' }}>⚠️ {error}</div>}
 
-      {isLoading ? (
-        <div className="loading-indicator">Accessing the vault...</div>
-      ) : repos.length === 0 ? (
-        <div className="page-header">
-          <div className="empty-state-icon" style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔦</div>
-          <p>No repositories found here yet.</p>
-          <p className="page-subtitle">Go explore the trending feed or search for something specific!</p>
-        </div>
-      ) : (
-        <div className="repo-grid">
-          {repos.map(repo => {
-            const repoData = {
-              id: repo.id || repo.repo_id,
-              full_name: repo.full_name || repo.repo_name,
-              html_url: repo.html_url || repo.repo_url,
-              stargazers_count: repo.stargazers_count || repo.repo_stars,
-              language: repo.language || repo.repo_language,
-              description: repo.description || repo.repo_description,
-              owner: repo.owner || { login: repo.repo_owner }
-            };
-            
-            return (
-              <div 
-                key={repoData.id} 
-                className="repo-card-wrapper"
-                onClick={() => setSelectedRepo(repoData)}
-              >
-                <RepoCard repo={repoData} />
+            {isCreating ? (
+              <form onSubmit={handleCreateAndAdd} style={{ marginBottom: 'var(--space-6)' }}>
+                <input 
+                  type="text" 
+                  placeholder="New collection name" 
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                  className="rr-input"
+                  style={{ marginBottom: '8px' }}
+                  autoFocus
+                  required
+                />
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <Button type="submit" variant="primary" style={{ flex: 1 }} disabled={isAdding}>Create & Add</Button>
+                  <Button type="button" variant="ghost" onClick={() => setIsCreating(false)} disabled={isAdding}>Cancel</Button>
+                </div>
+              </form>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: 'var(--space-6)' }}>
+                {loading ? (
+                  <div style={{ textAlign: 'center', padding: 'var(--space-4)' }}><Loader size="sm" /></div>
+                ) : collections.length > 0 ? (
+                  collections.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => handleAddToCollection(c.id)}
+                      disabled={isAdding}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '12px 16px',
+                        backgroundColor: 'var(--bg-input)',
+                        border: '1px solid var(--border-subtle)',
+                        borderRadius: '8px',
+                        color: 'var(--text-primary)',
+                        cursor: isAdding ? 'not-allowed' : 'pointer',
+                        textAlign: 'left',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={e => e.target.style.borderColor = 'var(--accent-primary)'}
+                      onMouseLeave={e => e.target.style.borderColor = 'var(--border-subtle)'}
+                    >
+                      <span>{c.name}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{c.item_count || 0} items</span>
+                    </button>
+                  ))
+                ) : (
+                  <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 'var(--space-4)' }}>No collections found.</p>
+                )}
+                
+                <Button 
+                  variant="secondary" 
+                  style={{ width: '100%', marginTop: '8px' }} 
+                  onClick={() => setIsCreating(true)}
+                  disabled={isAdding}
+                >
+                  + Create New Collection
+                </Button>
               </div>
-            );
-          })}
-        </div>
-      )}
-
-      {selectedRepo && (
-        <RepoModal repo={selectedRepo} onClose={() => setSelectedRepo(null)} />
-      )}
+            )}
+          </>
+        )}
+      </Card>
     </div>
   );
 };
+
 
 export default SaveToCollectionModal;

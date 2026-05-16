@@ -53,3 +53,19 @@
   background-size: 400% 100%;
   animation: shimmer 1.5s infinite linear;
 }
+
+/* Removal Animation */
+@keyframes shrinkOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.9); }
+}
+
+.repo-card-anim-wrap.removing {
+  opacity: 0;
+  transform: scale(0.97);
+  transition: opacity 220ms ease, transform 220ms ease;
+  pointer-events: none;
+}
+
+
+

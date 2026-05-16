@@ -281,3 +281,29 @@
 .rr-stat-row:last-child {
   border-bottom: none;
 }
+/* ==========================================================================
+   RepoCard Specifics
+   ========================================================================== */
+.repo-card-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.repo-card-actions .rr-btn {
+  width: 100%;
+  min-height: 38px;
+  justify-content: center;
+  white-space: nowrap;
+  padding: 0 4px; /* Tight padding for 4-col */
+  font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+  .repo-card-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

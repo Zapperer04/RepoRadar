@@ -1,8 +1,14 @@
 # 🛡️ RepoRadar Pre-Deployment Hardening Report
 
-## 1. Files Audited
-- `package.json`: Verified start/build scripts.
+## 1. Files Audited & Hardened
+- `src/utils/normalizeRepo.js`: New data normalization layer ensuring camelCase/snake_case compatibility.
+- `src/components/repo/RepoCard.jsx`: Repaired action layout (4-column grid) and polished button states.
+- `src/components/layout/Footer.jsx`: Repaired layout and alignment (centered 1200px container).
+- `src/styles/animations.css`: Refined removal transition.
+- `src/utils/repoInsights.js`: New utility for generating metadata-driven copy (Deterministic, No AI).
+- `src/pages/RepoDetails.jsx`: Integrated dynamic insights and strengths list.
 - `server/index.js`: Standardized PORT (5005) and registered routes.
+
 - `src/services/apiClient.js`: Standardized base URL handling.
 - `src/context/AuthContext.jsx`: Verified resilience to profile 500 errors.
 - `.env` & `.env.example`: Audited for security and clarity.
@@ -16,7 +22,7 @@
 ## 3. Documentation Updates
 - **README.md**: Comprehensive setup and feature guide created.
 - **DEPLOYMENT_NOTES.md**: Hosting recommendations and environment configuration guide created.
-- **DEMO_CHECKLIST.md**: Updated with environment verification steps.
+- **DEMO_CHECKLIST.md**: Updated with environment verification steps and bug fix confirmations.
 
 ## 4. API Status
 - **Standardized Prefix**: All frontend services now call `/api` prefixed endpoints.

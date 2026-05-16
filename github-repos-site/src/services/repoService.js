@@ -1,18 +1,25 @@
 import api from './apiClient.js';
 import { mockRepos } from '../data/mockRepos.js';
+import { normalizeRepo } from '../utils/normalizeRepo.js';
 
 // Safe wrapper around API calls with fallback
 const fetchWithFallback = async (endpoint, fallbackData) => {
   try {
     const response = await api.get(endpoint);
     // Our backend sends { success, source, data }
-    if (response.data && response.data.success) {
-      return { data: response.data.data, source: response.data.source || 'github' };
+    if (response.success) {
+      const normalizedData = Array.isArray(response.data) 
+        ? response.data.map(normalizeRepo) 
+        : normalizeRepo(response.data);
+      return { data: normalizedData, source: response.source || 'github' };
     }
     throw new Error('Invalid response format');
   } catch (error) {
     console.warn(`API failed for ${endpoint}, using fallback.`, error.message);
-    return { data: fallbackData, source: 'fallback' };
+    const normalizedFallback = Array.isArray(fallbackData)
+      ? fallbackData.map(normalizeRepo)
+      : normalizeRepo(fallbackData);
+    return { data: normalizedFallback, source: 'fallback' };
   }
 };
 

@@ -1,11 +1,21 @@
+import React, { useState } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout.jsx';
 import RepoGrid from '../components/repo/RepoGrid.jsx';
+import RepoCard from '../components/repo/RepoCard.jsx';
 import Loader from '../components/ui/Loader.jsx';
 import EmptyState from '../components/ui/EmptyState.jsx';
 import { useSavedRepos } from '../hooks/useSavedRepos.js';
 
 const SavedRepos = () => {
   const { savedRepos, loading } = useSavedRepos();
+  const [removingIds, setRemovingIds] = useState(new Set());
+
+  const handleDeleteAnimation = (repo) => {
+    return new Promise(resolve => {
+      setRemovingIds(prev => new Set(prev).add(repo.fullName));
+      setTimeout(resolve, 300); // Match animation duration
+    });
+  };
 
   return (
     <DashboardLayout>
@@ -20,7 +30,20 @@ const SavedRepos = () => {
             <Loader />
           </div>
         ) : savedRepos.length > 0 ? (
-          <RepoGrid repos={savedRepos} />
+          <div className="repo-grid">
+            {savedRepos.map(repo => (
+              <div 
+                key={repo.id} 
+                className={`repo-card-anim-wrap ${removingIds.has(repo.fullName) ? 'removing' : ''}`}
+              >
+                <RepoCard 
+                  repo={repo} 
+                  onDeleteAnimation={handleDeleteAnimation} 
+                />
+              </div>
+            ))}
+
+          </div>
         ) : (
           <EmptyState 
             title="No Saved Repositories" 
@@ -31,5 +54,6 @@ const SavedRepos = () => {
     </DashboardLayout>
   );
 };
+
 
 export default SavedRepos;
