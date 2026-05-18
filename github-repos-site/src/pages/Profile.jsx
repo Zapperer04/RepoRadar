@@ -176,8 +176,9 @@ const Profile = () => {
           gap: 'var(--space-6)',
           alignItems: 'start'
         }}>
-          {/* LEFT COLUMN: Overview & Stats */}
+          {/* LEFT COLUMN: Overview, Stats & Update Security */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+            {/* Card 1: User Overview */}
             <Card>
               <CardHeader>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
@@ -213,6 +214,7 @@ const Profile = () => {
               </div>
             </Card>
 
+            {/* Card 2: Platform Engagement */}
             <Card>
               <CardHeader>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -243,12 +245,74 @@ const Profile = () => {
                 )}
               </div>
             </Card>
+
+            {/* Card 3: Update Security */}
+            <Card>
+              <CardHeader>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <CardTitle style={{ fontSize: '1.15rem', margin: 0 }}>Update Security</CardTitle>
+                  <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Safeguard your account by updating your login password.</CardDescription>
+                </div>
+              </CardHeader>
+              <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', marginTop: 'var(--space-2)' }}>
+                {passwordError && (
+                  <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(239, 68, 68, 0.08)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)', color: 'var(--danger)', fontSize: '0.85rem' }}>
+                    ⚠️ {passwordError}
+                  </div>
+                )}
+
+                {passwordSuccess && (
+                  <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(16, 185, 129, 0.08)', border: '1px solid var(--success)', borderRadius: 'var(--radius-sm)', color: 'var(--success)', fontSize: '0.85rem' }}>
+                    ✅ {passwordSuccess}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Current Password</label>
+                  <Input 
+                    type="password"
+                    placeholder="••••••••"
+                    value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>New Password</label>
+                  <Input 
+                    type="password"
+                    placeholder="Minimum 6 characters"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Confirm New Password</label>
+                  <Input 
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <CardFooter style={{ justifyContent: 'flex-end', padding: 'var(--space-4) 0 0 0', marginTop: 'var(--space-2)' }}>
+                  <Button type="submit" variant="secondary" disabled={updatingPassword}>
+                    {updatingPassword ? 'Updating...' : 'Update Password'}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
           </div>
 
-          {/* RIGHT COLUMN: Edit forms & Danger Zone */}
+          {/* RIGHT COLUMN: Edit details & Danger Zone */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
             
-            {/* Edit Profile details card */}
+            {/* Card 4: Edit Profile details card */}
             <Card>
               <CardHeader>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -315,69 +379,7 @@ const Profile = () => {
               </form>
             </Card>
 
-            {/* Change Password Card */}
-            <Card>
-              <CardHeader>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <CardTitle style={{ fontSize: '1.15rem', margin: 0 }}>Update Security</CardTitle>
-                  <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Safeguard your account by updating your login password.</CardDescription>
-                </div>
-              </CardHeader>
-              <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', marginTop: 'var(--space-2)' }}>
-                {passwordError && (
-                  <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(239, 68, 68, 0.08)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)', color: 'var(--danger)', fontSize: '0.85rem' }}>
-                    ⚠️ {passwordError}
-                  </div>
-                )}
-
-                {passwordSuccess && (
-                  <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(16, 185, 129, 0.08)', border: '1px solid var(--success)', borderRadius: 'var(--radius-sm)', color: 'var(--success)', fontSize: '0.85rem' }}>
-                    ✅ {passwordSuccess}
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Current Password</label>
-                  <Input 
-                    type="password"
-                    placeholder="••••••••"
-                    value={currentPassword}
-                    onChange={e => setCurrentPassword(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>New Password</label>
-                  <Input 
-                    type="password"
-                    placeholder="Minimum 6 characters"
-                    value={newPassword}
-                    onChange={e => setNewPassword(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Confirm New Password</label>
-                  <Input 
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <CardFooter style={{ justifyContent: 'flex-end', padding: 'var(--space-4) 0 0 0', marginTop: 'var(--space-2)' }}>
-                  <Button type="submit" variant="secondary" disabled={updatingPassword}>
-                    {updatingPassword ? 'Updating...' : 'Update Password'}
-                  </Button>
-                </CardFooter>
-              </form>
-            </Card>
-
-            {/* Danger Zone Card */}
+            {/* Card 5: Danger Zone Card */}
             <Card style={{ borderColor: 'var(--danger)', borderStyle: 'dashed' }}>
               <CardHeader>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -429,8 +431,8 @@ const Profile = () => {
                 </CardFooter>
               </form>
             </Card>
-
           </div>
+
         </div>
       </div>
     </DashboardLayout>
