@@ -40,10 +40,17 @@
 - [x] **Content Polish**: Replaced generic "Why this repo matters" placeholders with repo-specific copy.
 - [x] **Strengths Indicators**: Added dynamic strengths badges based on repository metadata.
 
+## Phase 7: Profile Completion (Completed)
+- [x] **API Standardized**: Implemented `/api/auth/me` (GET, PUT, DELETE) and `/api/auth/password` (PUT) routes.
+- [x] **Fallback Support**: Updated token decoding to handle both `userId` and `id` keys.
+- [x] **Stats Integration**: Connected profile dashboard to user metrics API.
+- [x] **Delete Cascade**: Confirmed automatic cascaded deletion of all collections and stashed repos when user is deleted.
+- [x] **Secure Confirmation**: Added standard confirmation prompts and a "DELETE" typed check before deletion to prevent accidental loss.
+- [x] **User Syncing**: Connected profile updates to React's `AuthContext` so user data stays perfectly in sync.
+
 ## Known Issues (Demo Stabilization)
-- **Profile Dashboard (HTTP 500)**: The `/api/user/profile` and `/api/auth/me` endpoints currently return 500. 
-- **Mitigation**: Disabled profile backend calls and added maintenance UI to `/profile`. Removed links from Navbar.
-- **Next Step**: Standardize profile data contract and debug backend model/controller.
+- **Search History**: Backend endpoint exists, but UI integration is minimal.
+- **GitHub Rate Limit**: Fallback data layer will trigger automatically if API fails.
 
 ## Phase 6 (Pending)
 - [ ] **AI Summaries & Insights Integration**

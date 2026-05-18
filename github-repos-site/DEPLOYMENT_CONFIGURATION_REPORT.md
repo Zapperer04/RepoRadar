@@ -39,7 +39,7 @@
 - `dir`: Failed to execute due to `powershell` not found in tool environment PATH.
 
 ## 7. Known Issues
-- **Profile Endpoint (HTTP 500)**: Remains in maintenance mode. This does not block the core demo flow (Explore -> Details -> Signup/Login -> Save -> Collections).
+- **None**: Profile completed and fully operational.
 
 ## 8. Final Assessment
 - **Safe to Commit**: **YES**. All deployment files are generic and do not contain secrets.

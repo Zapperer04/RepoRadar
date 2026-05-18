@@ -77,6 +77,39 @@ class User {
   }
 
   /**
+   * Update username and email
+   */
+  static async updateAuthMe(userId, { username, email }) {
+    return db.getOne(
+      `UPDATE users 
+       SET username = $1, email = $2, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $3
+       RETURNING id, email, username, full_name, avatar_url, bio, created_at`,
+      [username, email, userId]
+    );
+  }
+
+  /**
+   * Update user password
+   */
+  static async updatePassword(userId, newPassword) {
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+    
+    await db.query(
+      'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [passwordHash, userId]
+    );
+  }
+
+  /**
+   * Delete user account
+   */
+  static async deleteUser(userId) {
+    return db.query('DELETE FROM users WHERE id = $1', [userId]);
+  }
+
+  /**
    * Update last login
    */
   static async updateLastLogin(userId) {

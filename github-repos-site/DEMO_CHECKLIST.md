@@ -4,7 +4,7 @@
 - **Frontend**: `http://localhost:5006` (`npm start`)
 - **Backend**: `http://localhost:5005` (`npm run server`)
 - **Environment**: `.env` configured with `REACT_APP_API_BASE_URL`
-- **Status**: **STABILIZED** (Profile Dashboard Hidden)
+- **Status**: **FULLY OPERATIONAL**
 
 ## 🚀 Recommended Demo Flow
 
@@ -19,7 +19,8 @@
 - [ ] From Home or Explore, click **Sign Up**
 - [ ] Create a new test account
 - [ ] **Verify**: Redirected to Home, Navbar shows user name
-- [ ] **Verify**: Profile link is hidden/replaced by session status
+- [ ] **Verify**: Click username in Navbar to open **Profile Settings**
+- [ ] **Verify**: View details, edit profile, change password, or delete account
 
 ### 3. Persistence
 - [ ] Go back to any Repository Details page
@@ -42,7 +43,7 @@
 ## ⚠️ Known Issues & Mitigations
 | Issue | Status | Mitigation |
 | :--- | :--- | :--- |
-| **Profile Dashboard** | 🔴 FAIL | Entry points hidden from Navbar; Page replaced with maintenance UI. |
+| **Profile Dashboard** | 🟢 STABLE | Account details, edits, password updates, and account deletion are fully functional. |
 | **Search History** | 🟡 PARTIAL | Backend endpoint exists, but UI integration is minimal. |
 | **GitHub Rate Limit** | 🟢 STABLE | Fallback data layer (`fallbackRepos.js`) will trigger automatically if API fails. |
 

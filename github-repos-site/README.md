@@ -53,9 +53,6 @@ npm run server
 npm start
 ```
 
-## ⚠️ Known Issues
-- **Profile Dashboard**: The user profile page is currently under maintenance. Core discovery, stashing, and collections features are fully operational.
-
 ## 📜 Scripts
 - `npm start`: Runs the frontend on port 5006.
 - `npm run server`: Runs the backend on port 5005.

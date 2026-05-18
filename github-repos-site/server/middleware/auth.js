@@ -19,7 +19,11 @@ const verifyToken = (req, res, next) => {
     const token = authHeader.substring(7);
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    req.userId = decoded.userId;
+    req.userId = decoded.userId || decoded.id;
+    if (!req.userId) {
+      return res.status(401).json({ error: 'Missing user ID in token payload' });
+    }
+    
     req.user = decoded;
     next();
   } catch (error) {

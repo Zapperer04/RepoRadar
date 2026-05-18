@@ -90,10 +90,19 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const updateUser = useCallback((updatedUserData) => {
+    setUser(prevUser => {
+      if (!prevUser) return updatedUserData;
+      return { ...prevUser, ...updatedUserData };
+    });
+  }, []);
+
   const getToken = useCallback(() => localStorage.getItem('authToken'), []);
 
   const value = {
     user,
+    setUser,
+    updateUser,
     isAuthenticated,
     isLoading,
     error,

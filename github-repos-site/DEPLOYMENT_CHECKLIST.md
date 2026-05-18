@@ -36,3 +36,6 @@ Follow these steps in order to achieve a stable production deployment.
 
 ---
 **Warning**: If you change the database schema, remember to update the Neon database manually or via the initialization script.
+
+## 5. Database Migration & Profile Status
+- [x] **No DB migration required**: The cascade delete foreign keys (`ON DELETE CASCADE` for collections, saved repositories, search history, etc.) are already fully declared in `server/db/schema.sql`. The permanent account deletion feature cascades automatically at the database level. No manual database modification is required for this phase.

@@ -88,7 +88,11 @@ const Collections = () => {
                   <Link to={`/collections/${c.id}`} style={{ flex: 1 }}>
                     <Button variant="secondary" style={{ width: '100%' }}>View</Button>
                   </Link>
-                  <Button variant="ghost" onClick={() => deleteCollection(c.id)} title="Delete collection">🗑️</Button>
+                  <Button variant="ghost" onClick={() => {
+                    if (window.confirm('Are you sure you want to delete this collection?')) {
+                      deleteCollection(c.id);
+                    }
+                  }} title="Delete collection">🗑️</Button>
                 </CardFooter>
               </Card>
             ))}

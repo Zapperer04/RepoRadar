@@ -143,6 +143,116 @@ router.get('/me', verifyToken, async (req, res) => {
 });
 
 /**
+ * PUT /api/auth/me
+ * Update username/email
+ */
+router.put('/me', verifyToken, async (req, res) => {
+  try {
+    const { username, email } = req.body;
+
+    if (!username || !email) {
+      return res.status(400).json({ success: false, error: 'Username and email are required' });
+    }
+
+    if (username.length < 3) {
+      return res.status(400).json({ success: false, error: 'Username must be at least 3 characters' });
+    }
+
+    // Check for duplicate username or email
+    const userByEmail = await User.findByEmail(email);
+    if (userByEmail && userByEmail.id !== req.userId) {
+      return res.status(409).json({ success: false, error: 'Email already in use' });
+    }
+
+    // Since we don't have a direct findByUsername, we can query standard db client
+    const db = require('../db');
+    const userByUsername = await db.getOne('SELECT id FROM users WHERE username = $1 AND id != $2', [username, req.userId]);
+    if (userByUsername) {
+      return res.status(409).json({ success: false, error: 'Username already in use' });
+    }
+
+    const updatedUser = await User.updateAuthMe(req.userId, { username, email });
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        username: updatedUser.username,
+        fullName: updatedUser.full_name,
+        avatarUrl: updatedUser.avatar_url,
+        bio: updatedUser.bio,
+        created_at: updatedUser.created_at
+      }
+    });
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    res.status(500).json({ success: false, error: 'Failed to update profile' });
+  }
+});
+
+/**
+ * PUT /api/auth/password
+ * Change password
+ */
+router.put('/password', verifyToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, error: 'Current password and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'New password must be at least 6 characters' });
+    }
+
+    // Find the user to verify current password
+    const db = require('../db');
+    const user = await db.getOne('SELECT password_hash FROM users WHERE id = $1', [req.userId]);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    const isValid = await User.verifyPassword(currentPassword, user.password_hash);
+    if (!isValid) {
+      return res.status(401).json({ success: false, error: 'Incorrect current password' });
+    }
+
+    await User.updatePassword(req.userId, newPassword);
+
+    res.json({
+      success: true,
+      message: 'Password updated successfully'
+    });
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({ success: false, error: 'Failed to update password' });
+  }
+});
+
+/**
+ * DELETE /api/auth/me
+ * Delete current user account and cascade delete all their data
+ */
+router.delete('/me', verifyToken, async (req, res) => {
+  try {
+    await User.deleteUser(req.userId);
+    res.json({
+      success: true,
+      message: 'Account deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete account' });
+  }
+});
+
+/**
  * POST /api/auth/verify
  * Verify if token is still valid
  */

@@ -63,9 +63,9 @@ const Navbar = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
         {isAuthenticated ? (
           <>
-            <div className="rr-btn rr-btn-secondary" style={{ cursor: 'default' }}>
+            <Link to="/profile" className="rr-btn rr-btn-secondary" style={{ textDecoration: 'none' }}>
               👤 {user?.username || 'User'}
-            </div>
+            </Link>
             <button onClick={handleLogout} className="rr-btn rr-btn-danger">
               Logout
             </button>

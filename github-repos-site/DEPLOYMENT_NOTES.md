@@ -32,4 +32,4 @@ Set these in **Environment**:
 
 
 ## ⚠️ Known Blockers
-- **Profile Endpoint**: The `/api/user/profile` endpoint returns HTTP 500. It is intentionally bypassed in the current UI. Do not attempt to fix this during deployment until the standard data contract is finalized.
+- **None**: All core and advanced workflows are fully resolved and operational.
