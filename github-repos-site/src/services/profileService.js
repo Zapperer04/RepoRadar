@@ -37,8 +37,10 @@ const profileService = {
   /**
    * Delete user account permanently
    */
-  deleteAccount: async () => {
-    return apiClient.delete('/api/auth/me');
+  deleteAccount: async (password) => {
+    return apiClient.delete('/api/auth/me', {
+      body: JSON.stringify({ password })
+    });
   }
 };
 

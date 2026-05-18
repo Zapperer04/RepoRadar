@@ -180,6 +180,14 @@
   box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.1);
 }
 
+.rr-input:disabled, .rr-select:disabled {
+  background-color: rgba(255, 255, 255, 0.02);
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .rr-input::placeholder {
   color: var(--text-muted);
 }

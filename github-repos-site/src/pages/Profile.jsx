@@ -32,6 +32,7 @@ const Profile = () => {
 
   // Delete Account State
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState(null);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
@@ -127,7 +128,12 @@ const Profile = () => {
     setDeleteError(null);
 
     if (deleteConfirmationText !== 'DELETE') {
-      setDeleteError("Please type 'DELETE' exactly to confirm.");
+      setDeleteError("Please type 'DELETE' exactly to authorize.");
+      return;
+    }
+
+    if (!deletePassword) {
+      setDeleteError("Please enter your current password to authorize.");
       return;
     }
 
@@ -137,7 +143,7 @@ const Profile = () => {
 
     setDeletingAccount(true);
     try {
-      const response = await profileService.deleteAccount();
+      const response = await profileService.deleteAccount(deletePassword);
       if (response && response.success) {
         alert('Your account has been successfully deleted.');
         await logout();
@@ -147,7 +153,7 @@ const Profile = () => {
         setDeletingAccount(false);
       }
     } catch (err) {
-      setDeleteError(err?.data?.error || err.message || 'An error occurred while deleting account.');
+      setDeleteError(err?.data?.error || err.message || 'Incorrect password or deletion error.');
       setDeletingAccount(false);
     }
   };
@@ -158,7 +164,7 @@ const Profile = () => {
 
   return (
     <DashboardLayout>
-      <div className="page-container">
+      <div className="page-container" style={{ maxWidth: '1000px' }}>
         <header className="page-header" style={{ marginBottom: 'var(--space-6)' }}>
           <h1 className="page-title">👤 Account Settings</h1>
           <p className="page-subtitle">Manage your profile details, change security settings, or close your account.</p>
@@ -166,7 +172,7 @@ const Profile = () => {
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: 'var(--space-6)',
           alignItems: 'start'
         }}>
@@ -176,62 +182,60 @@ const Profile = () => {
               <CardHeader>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
                   <div style={{
-                    width: '64px',
-                    height: '64px',
+                    width: '56px',
+                    height: '56px',
                     borderRadius: '50%',
                     backgroundColor: 'var(--accent-primary)',
                     color: 'white',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1.75rem',
+                    fontSize: '1.5rem',
                     fontWeight: 700
                   }}>
                     {user?.username ? user.username.charAt(0).toUpperCase() : 'U'}
                   </div>
                   <div>
-                    <CardTitle style={{ margin: 0 }}>{user?.username || 'User'}</CardTitle>
-                    <CardDescription style={{ margin: 0 }}>{user?.email || 'email@example.com'}</CardDescription>
+                    <CardTitle style={{ margin: 0, fontSize: '1.15rem' }}>{user?.username || 'User'}</CardTitle>
+                    <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>{user?.email || 'email@example.com'}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <div style={{ padding: '0 var(--space-6) var(--space-6) var(--space-6)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', fontSize: '0.95rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: 'var(--space-2)' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Status:</span>
-                    <Badge variant="success">Active</Badge>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 'var(--space-2)' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Member Since:</span>
-                    <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{memberSince}</span>
-                  </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', fontSize: '0.9rem', marginTop: 'var(--space-2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: 'var(--space-2)' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Status:</span>
+                  <Badge variant="success">Active</Badge>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 'var(--space-1)' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Member Since:</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{memberSince}</span>
                 </div>
               </div>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>📊 Platform Engagement</CardTitle>
-                <CardDescription>Your activity metrics and saved analytics across RepoRadar.</CardDescription>
+                <CardTitle style={{ fontSize: '1.15rem' }}>📊 Platform Engagement</CardTitle>
+                <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Your activity metrics and saved analytics across RepoRadar.</CardDescription>
               </CardHeader>
-              <div style={{ padding: '0 var(--space-6) var(--space-6) var(--space-6)' }}>
+              <div style={{ marginTop: 'var(--space-2)' }}>
                 {loadingStats ? (
                   <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-4)' }}>
                     <Loader />
                   </div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-3)', textAlign: 'center' }}>
-                    <div style={{ padding: 'var(--space-3)', backgroundColor: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-primary)' }}>{stats.favoritesCount}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Saved</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-2)', textAlign: 'center' }}>
+                    <div style={{ padding: 'var(--space-3)', backgroundColor: 'var(--bg-soft)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)' }}>
+                      <div style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--accent-primary)' }}>{stats.favoritesCount}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Saved</div>
                     </div>
-                    <div style={{ padding: 'var(--space-3)', backgroundColor: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-primary)' }}>{stats.collectionsCount}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Collections</div>
+                    <div style={{ padding: 'var(--space-3)', backgroundColor: 'var(--bg-soft)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)' }}>
+                      <div style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--accent-primary)' }}>{stats.collectionsCount}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Collections</div>
                     </div>
-                    <div style={{ padding: 'var(--space-3)', backgroundColor: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-primary)' }}>{stats.searchHistoryCount}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Searches</div>
+                    <div style={{ padding: 'var(--space-3)', backgroundColor: 'var(--bg-soft)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)' }}>
+                      <div style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--accent-primary)' }}>{stats.searchHistoryCount}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Searches</div>
                     </div>
                   </div>
                 )}
@@ -245,46 +249,44 @@ const Profile = () => {
             {/* Edit Profile details card */}
             <Card>
               <CardHeader>
-                <CardTitle>Personal Details</CardTitle>
-                <CardDescription>Update your username and contact email address.</CardDescription>
+                <CardTitle style={{ fontSize: '1.15rem' }}>Personal Details</CardTitle>
+                <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Update your username and contact email address.</CardDescription>
               </CardHeader>
-              <form onSubmit={handleProfileUpdate}>
-                <div style={{ padding: '0 var(--space-6) var(--space-6) var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                  
-                  {profileError && (
-                    <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-md)', color: 'var(--danger)', fontSize: '0.9rem' }}>
-                      ⚠️ {profileError}
-                    </div>
-                  )}
-
-                  {profileSuccess && (
-                    <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-md)', color: 'var(--accent-primary)', fontSize: '0.9rem' }}>
-                      ✅ {profileSuccess}
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Username</label>
-                    <Input 
-                      value={username}
-                      onChange={e => setUsername(e.target.value)}
-                      disabled={!isEditing}
-                      required
-                    />
+              <form onSubmit={handleProfileUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', marginTop: 'var(--space-2)' }}>
+                {profileError && (
+                  <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(239, 68, 68, 0.08)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)', color: 'var(--danger)', fontSize: '0.85rem' }}>
+                    ⚠️ {profileError}
                   </div>
+                )}
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Email Address</label>
-                    <Input 
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      disabled={!isEditing}
-                      required
-                    />
+                {profileSuccess && (
+                  <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(16, 185, 129, 0.08)', border: '1px solid var(--success)', borderRadius: 'var(--radius-sm)', color: 'var(--success)', fontSize: '0.85rem' }}>
+                    ✅ {profileSuccess}
                   </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Username</label>
+                  <Input 
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    disabled={!isEditing}
+                    required
+                  />
                 </div>
-                <CardFooter style={{ justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Email Address</label>
+                  <Input 
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    disabled={!isEditing}
+                    required
+                  />
+                </div>
+
+                <CardFooter style={{ justifyContent: 'flex-end', gap: 'var(--space-2)', padding: 'var(--space-4) 0 0 0', marginTop: 'var(--space-2)' }}>
                   {isEditing ? (
                     <>
                       <Button type="button" variant="ghost" onClick={() => {
@@ -312,58 +314,56 @@ const Profile = () => {
             {/* Change Password Card */}
             <Card>
               <CardHeader>
-                <CardTitle>Update Security</CardTitle>
-                <CardDescription>Safeguard your account by updating your login password.</CardDescription>
+                <CardTitle style={{ fontSize: '1.15rem' }}>Update Security</CardTitle>
+                <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Safeguard your account by updating your login password.</CardDescription>
               </CardHeader>
-              <form onSubmit={handlePasswordChange}>
-                <div style={{ padding: '0 var(--space-6) var(--space-6) var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                  
-                  {passwordError && (
-                    <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-md)', color: 'var(--danger)', fontSize: '0.9rem' }}>
-                      ⚠️ {passwordError}
-                    </div>
-                  )}
-
-                  {passwordSuccess && (
-                    <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid var(--accent-primary)', borderRadius: 'var(--radius-md)', color: 'var(--accent-primary)', fontSize: '0.9rem' }}>
-                      ✅ {passwordSuccess}
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Current Password</label>
-                    <Input 
-                      type="password"
-                      placeholder="••••••••"
-                      value={currentPassword}
-                      onChange={e => setCurrentPassword(e.target.value)}
-                      required
-                    />
+              <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', marginTop: 'var(--space-2)' }}>
+                {passwordError && (
+                  <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(239, 68, 68, 0.08)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)', color: 'var(--danger)', fontSize: '0.85rem' }}>
+                    ⚠️ {passwordError}
                   </div>
+                )}
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>New Password</label>
-                    <Input 
-                      type="password"
-                      placeholder="Minimum 6 characters"
-                      value={newPassword}
-                      onChange={e => setNewPassword(e.target.value)}
-                      required
-                    />
+                {passwordSuccess && (
+                  <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(16, 185, 129, 0.08)', border: '1px solid var(--success)', borderRadius: 'var(--radius-sm)', color: 'var(--success)', fontSize: '0.85rem' }}>
+                    ✅ {passwordSuccess}
                   </div>
+                )}
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>Confirm New Password</label>
-                    <Input 
-                      type="password"
-                      placeholder="Confirm new password"
-                      value={confirmPassword}
-                      onChange={e => setConfirmPassword(e.target.value)}
-                      required
-                    />
-                  </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Current Password</label>
+                  <Input 
+                    type="password"
+                    placeholder="••••••••"
+                    value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
+                    required
+                  />
                 </div>
-                <CardFooter style={{ justifyContent: 'flex-end' }}>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>New Password</label>
+                  <Input 
+                    type="password"
+                    placeholder="Minimum 6 characters"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Confirm New Password</label>
+                  <Input 
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <CardFooter style={{ justifyContent: 'flex-end', padding: 'var(--space-4) 0 0 0', marginTop: 'var(--space-2)' }}>
                   <Button type="submit" variant="secondary" disabled={updatingPassword}>
                     {updatingPassword ? 'Updating...' : 'Update Password'}
                   </Button>
@@ -374,37 +374,47 @@ const Profile = () => {
             {/* Danger Zone Card */}
             <Card style={{ borderColor: 'var(--danger)', borderStyle: 'dashed' }}>
               <CardHeader>
-                <CardTitle style={{ color: 'var(--danger)' }}>⚠️ Danger Zone</CardTitle>
-                <CardDescription>Permanently remove your account and all associated collections/saves from RepoRadar.</CardDescription>
+                <CardTitle style={{ color: 'var(--danger)', fontSize: '1.15rem' }}>⚠️ Danger Zone</CardTitle>
+                <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Permanently remove your account and all associated collections/saves.</CardDescription>
               </CardHeader>
-              <form onSubmit={handleDeleteAccount}>
-                <div style={{ padding: '0 var(--space-6) var(--space-6) var(--space-6)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                  
-                  {deleteError && (
-                    <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-md)', color: 'var(--danger)', fontSize: '0.9rem' }}>
-                      ⚠️ {deleteError}
-                    </div>
-                  )}
-
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
-                    Deleting your account is permanent and cannot be undone. Please type <strong>DELETE</strong> in the field below to authorize this deletion.
-                  </p>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                    <Input 
-                      placeholder="Type DELETE to confirm"
-                      value={deleteConfirmationText}
-                      onChange={e => setDeleteConfirmationText(e.target.value)}
-                      style={{ borderColor: deleteConfirmationText === 'DELETE' ? 'var(--danger)' : undefined }}
-                      required
-                    />
+              <form onSubmit={handleDeleteAccount} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', marginTop: 'var(--space-2)' }}>
+                {deleteError && (
+                  <div style={{ padding: 'var(--space-3)', backgroundColor: 'rgba(239, 68, 68, 0.08)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)', color: 'var(--danger)', fontSize: '0.85rem' }}>
+                    ⚠️ {deleteError}
                   </div>
+                )}
+
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: 0, lineHeight: 1.4 }}>
+                  Deleting your account is permanent. Please type <strong>DELETE</strong> and enter your current password to authorize this action.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Confirmation Phrase</label>
+                  <Input 
+                    placeholder="Type DELETE to confirm"
+                    value={deleteConfirmationText}
+                    onChange={e => setDeleteConfirmationText(e.target.value)}
+                    style={{ borderColor: deleteConfirmationText === 'DELETE' ? 'var(--danger)' : undefined }}
+                    required
+                  />
                 </div>
-                <CardFooter style={{ justifyContent: 'flex-end' }}>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Verify Your Password</label>
+                  <Input 
+                    type="password"
+                    placeholder="Enter your current password"
+                    value={deletePassword}
+                    onChange={e => setDeletePassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <CardFooter style={{ justifyContent: 'flex-end', padding: 'var(--space-4) 0 0 0', marginTop: 'var(--space-2)' }}>
                   <Button 
                     type="submit" 
                     variant="danger" 
-                    disabled={deleteConfirmationText !== 'DELETE' || deletingAccount}
+                    disabled={deleteConfirmationText !== 'DELETE' || !deletePassword || deletingAccount}
                   >
                     {deletingAccount ? 'Deleting Account...' : 'Permanently Delete Account'}
                   </Button>

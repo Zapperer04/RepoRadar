@@ -241,6 +241,22 @@ router.put('/password', verifyToken, async (req, res) => {
  */
 router.delete('/me', verifyToken, async (req, res) => {
   try {
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ success: false, error: 'Password is required to confirm account deletion' });
+    }
+
+    const db = require('../db');
+    const user = await db.getOne('SELECT password_hash FROM users WHERE id = $1', [req.userId]);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    const isValid = await User.verifyPassword(password, user.password_hash);
+    if (!isValid) {
+      return res.status(401).json({ success: false, error: 'Incorrect password. Account deletion aborted.' });
+    }
+
     await User.deleteUser(req.userId);
     res.json({
       success: true,

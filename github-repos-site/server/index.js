@@ -2,6 +2,22 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+
+// Auto-migrate/copy new favicon if present in local system
+try {
+  const fs = require('fs');
+  const src = 'C:/Users/Kaustav/.gemini/antigravity/brain/efd2413f-4ad1-40a8-b1fb-ae9f3d050098/reporadar_logo_favicon_1779102954089.png';
+  const destPng = path.join(__dirname, '../public/favicon.png');
+  const destIco = path.join(__dirname, '../public/favicon.ico');
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, destPng);
+    fs.copyFileSync(src, destIco);
+    console.log('[FAVICON] Successfully copied reporadar favicon logo to public/favicon.png and public/favicon.ico');
+  }
+} catch (e) {
+  console.log('[FAVICON_NOTICE] Copy skipped or local filesystem mismatch:', e.message);
+}
+
 const { initializeDatabase } = require('./db/init');
 
 // Load controllers and routes
