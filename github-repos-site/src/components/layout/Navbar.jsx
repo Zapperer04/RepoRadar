@@ -25,7 +25,7 @@ const Navbar = () => {
       zIndex: 100
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-6)', overflowX: 'auto', whiteSpace: 'nowrap', paddingRight: 'var(--space-4)' }}>
-        <Link to="/" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+        <Link to="/" className="site-logo-link" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)', textDecoration: 'none' }}>
           <span role="img" aria-label="radar">🛰️</span> 
           <span className="hide-on-mobile">RepoRadar</span>
         </Link>

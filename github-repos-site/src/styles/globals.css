@@ -42,6 +42,15 @@ a:hover {
   text-decoration: underline;
 }
 
+.site-logo-link {
+  text-decoration: none !important;
+}
+
+.site-logo-link:hover, .site-logo-link:focus, .site-logo-link:active {
+  text-decoration: none !important;
+  opacity: 1 !important;
+}
+
 /* Form element & button resets */
 button, input, textarea, select {
   font-family: inherit;
