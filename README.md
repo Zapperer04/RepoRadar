@@ -133,9 +133,9 @@ When a user requests repository details, the Express server queries the GitHub A
 
 ---
 
-## 📸 Screenshots
+<!--## 📸 Screenshots
 
-> Screenshots can be captured and added to the directories below during local verification.
+> Screenshots can be captured and added to the directories below during local verification. -->
 
 <!--
 ![Home Dashboard](github-repos-site/public/screenshots/home.png)
