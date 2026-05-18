@@ -215,8 +215,10 @@ const Profile = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle style={{ fontSize: '1.15rem' }}>📊 Platform Engagement</CardTitle>
-                <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Your activity metrics and saved analytics across RepoRadar.</CardDescription>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <CardTitle style={{ fontSize: '1.15rem', margin: 0 }}>📊 Platform Engagement</CardTitle>
+                  <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Your activity metrics and saved analytics across RepoRadar.</CardDescription>
+                </div>
               </CardHeader>
               <div style={{ marginTop: 'var(--space-2)' }}>
                 {loadingStats ? (
@@ -249,8 +251,10 @@ const Profile = () => {
             {/* Edit Profile details card */}
             <Card>
               <CardHeader>
-                <CardTitle style={{ fontSize: '1.15rem' }}>Personal Details</CardTitle>
-                <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Update your username and contact email address.</CardDescription>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <CardTitle style={{ fontSize: '1.15rem', margin: 0 }}>Personal Details</CardTitle>
+                  <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Update your username and contact email address.</CardDescription>
+                </div>
               </CardHeader>
               <form onSubmit={handleProfileUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', marginTop: 'var(--space-2)' }}>
                 {profileError && (
@@ -314,8 +318,10 @@ const Profile = () => {
             {/* Change Password Card */}
             <Card>
               <CardHeader>
-                <CardTitle style={{ fontSize: '1.15rem' }}>Update Security</CardTitle>
-                <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Safeguard your account by updating your login password.</CardDescription>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <CardTitle style={{ fontSize: '1.15rem', margin: 0 }}>Update Security</CardTitle>
+                  <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Safeguard your account by updating your login password.</CardDescription>
+                </div>
               </CardHeader>
               <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', marginTop: 'var(--space-2)' }}>
                 {passwordError && (
@@ -374,8 +380,10 @@ const Profile = () => {
             {/* Danger Zone Card */}
             <Card style={{ borderColor: 'var(--danger)', borderStyle: 'dashed' }}>
               <CardHeader>
-                <CardTitle style={{ color: 'var(--danger)', fontSize: '1.15rem' }}>⚠️ Danger Zone</CardTitle>
-                <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Permanently remove your account and all associated collections/saves.</CardDescription>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <CardTitle style={{ color: 'var(--danger)', fontSize: '1.15rem', margin: 0 }}>⚠️ Danger Zone</CardTitle>
+                  <CardDescription style={{ margin: 0, fontSize: '0.85rem' }}>Permanently remove your account and all associated collections/saves.</CardDescription>
+                </div>
               </CardHeader>
               <form onSubmit={handleDeleteAccount} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', marginTop: 'var(--space-2)' }}>
                 {deleteError && (
